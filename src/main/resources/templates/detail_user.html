@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Hồ sơ cá nhân</title>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/home-page.css}">
+    <style>
+        body {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .profile-wrapper {
+            max-width: 100%;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        /* ── Cột trái: avatar + readonly ── */
+        .left-panel {
+            background: #16213e;
+            border-radius: 16px;
+            padding: 28px 10px;
+            text-align: center;
+        }
+
+        /* Avatar upload zone */
+        .avatar-zone {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .avatar-img {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #e94560;
+            display: block;
+        }
+
+        .avatar-overlay {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity .2s;
+        }
+
+        .avatar-zone:hover .avatar-overlay {
+            opacity: 1;
+        }
+
+        .avatar-overlay span {
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        #avatarFileInput {
+            display: none;
+        }
+
+        /* Readonly fields */
+        .info-row {
+            display: flex;
+            flex-direction: column;
+            margin-top: 16px;
+            text-align: left;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        .info-value {
+            background: #0f3460;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        .badge-role {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e94560;
+            color: white;
+        }
+
+        /* ── Cột phải: form chỉnh sửa ── */
+        .right-panel {
+            background: #16213e;
+            border-radius: 16px;
+            padding: 28px 10px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #e94560;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #2a2a4a;
+        }
+
+        .right-panel .form-control {
+            background: #0f3460;
+            border: 1px solid #2a2a4a;
+            color: white;
+            border-radius: 8px;
+        }
+
+        .right-panel .form-control:focus {
+            background: #0f3460;
+            border-color: #e94560;
+            color: white;
+            box-shadow: 0 0 0 2px rgba(233, 69, 96, .25);
+        }
+
+        .right-panel label {
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+
+        .btn-save {
+            background: #e94560;
+            border: none;
+            color: white;
+            padding: 10px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .btn-save:hover {
+            background: #c73652;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{layouts/navbar :: navbar}"></div>
+
+<div class="profile-wrapper">
+
+    <!-- Flash success -->
+    <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show mb-3">
+        <span th:text="${successMsg}"></span>
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+
+    <div style="width: 100%; display: flex; justify-content: flex-end;">
+
+        <a class="btn btn-secondary my-2 mx-5 w-3"
+           th:href="@{/auth/logout}"
+           onclick="return confirm('Bạn có chắc muốn đăng xuất không?')">
+            Đăng xuất
+        </a>
+    </div>
+    <form th:action="@{/cinema/profile/update}"
+          th:object="${profileForm}"
+          method="post"
+          enctype="multipart/form-data">
+
+        <div style="display:flex;justify-items: center; gap: 20px; flex-wrap: wrap;">
+
+            <!-- ══ CỘT TRÁI ══ -->
+            <div class="" style="width: 45%; margin-left: 20px">
+                <div class="left-panel h-100">
+
+                    <!-- Avatar upload -->
+                    <div class="avatar-zone" onclick="document.getElementById('avatarFileInput').click()">
+                        <img id="avatarPreview"
+                             th:src="${profile.avatar != null} ?
+            (${profile.avatar.contains('http')} ? ${profile.avatar} : '/images/' + ${profile.avatar}) :
+            'https://ui-avatars.com/api/?background=e94560&color=fff&size=110&name=' + (profile.fullName != null ? profile.fullName : profile.username)"
+                             class="avatar-img"
+                             alt="avatar">
+                        <div class="avatar-overlay">
+                            <span>📷 Đổi ảnh</span>
+                        </div>
+                    </div>
+                    <!-- Input file ẩn — name khớp @RequestParam("avatarFile") -->
+                    <input type="file" id="avatarFileInput"
+                           name="avatarFile"
+                           accept="image/png, image/jpeg, image/webp">
+                    <p style="font-size:11px; color:#666; margin-top:6px;">
+                        Nhấp vào ảnh để thay đổi
+                    </p>
+
+                    <h6 style="margin-top:12px; font-weight:600;"
+                        th:text="${profile.fullName != null ? profile.fullName : profile.username}">
+                    </h6>
+                    <span class="badge-role" th:text="${profile.role}"></span>
+
+                    <!-- Thông tin chỉ đọc -->
+                    <div class="info-row">
+                        <span class="info-label">Tên đăng nhập</span>
+                        <span class="info-value" th:text="${profile.username}"></span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Email</span>
+                        <span class="info-value" th:text="${profile.email}"></span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Ngày tham gia</span>
+                        <span class="info-value"
+                              th:text="${profile.createdAt != null ?
+                                  #temporals.format(profile.createdAt, 'dd/MM/yyyy') : '—'}">
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ══ CỘT PHẢI ══ -->
+            <div class="" style="width: 50%">
+                <div class="right-panel">
+
+                    <div class="section-title">Chỉnh sửa thông tin cá nhân</div>
+
+                    <!-- Hàng 1 -->
+                    <!--                    <div class="form-row">-->
+                    <div class="form-group ">
+                        <label>Họ và tên <span style="color:#e94560">*</span></label>
+                        <input type="text" class="form-control"
+                               th:field="*{fullName}"
+                               th:classappend="${#fields.hasErrors('fullName')} ? ' is-invalid'"
+                               placeholder="Nguyễn Văn A">
+                        <div class="invalid-feedback" th:errors="*{fullName}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Số điện thoại</label>
+                        <input type="text" class="form-control"
+                               th:field="*{phone}"
+                               th:classappend="${#fields.hasErrors('phone')} ? ' is-invalid'"
+                               placeholder="0912 345 678">
+                        <div class="invalid-feedback" th:errors="*{phone}"></div>
+                    </div>
+                    <!--                    </div>-->
+
+                    <!-- Hàng 2 -->
+                    <!--                    <div class="form-row">-->
+                    <div class="form-group ">
+                        <label>Ngày sinh</label>
+                        <input type="date" class="form-control"
+                               th:field="*{birthDay}"
+                               th:classappend="${#fields.hasErrors('birthDay')} ? ' is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{birthDay}"></div>
+                    </div>
+
+                    <div class="form-group ">
+                        <label>Địa chỉ</label>
+                        <input type="text" class="form-control"
+                               th:field="*{address}"
+                               th:classappend="${#fields.hasErrors('address')} ? ' is-invalid'"
+                               placeholder="123 Đường ABC, Quận 1">
+                        <div class="invalid-feedback" th:errors="*{address}"></div>
+                    </div>
+                    <!--                    </div>-->
+
+                    <button type="submit" class="btn btn-save">
+                        Lưu thay đổi
+                    </button>
+
+                </div>
+            </div>
+
+        </div><!-- end row -->
+
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<script>
+    // Preview ảnh ngay khi chọn file — không cần submit
+    document.getElementById('avatarFileInput').addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file) return;
+
+        // Kiểm tra định dạng
+        if (!file.type.startsWith('image/')) {
+            alert('Vui lòng chọn file ảnh (jpg, png, webp)');
+            this.value = '';
+            return;
+        }
+
+        // Kiểm tra dung lượng (tối đa 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Ảnh tối đa 2MB');
+            this.value = '';
+            return;
+        }
+
+        // Hiển thị preview
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('avatarPreview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+</script>
+
+</body>
+</html>

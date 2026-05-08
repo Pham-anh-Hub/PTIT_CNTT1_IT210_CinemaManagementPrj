@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${isEdit} ? 'Sửa phim' : 'Thêm phim mới'"></title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body { background: #0f0f1a; color: #e0e0e0; margin: 0; }
+        .admin-wrapper { display: flex; min-height: 100vh; }
+
+        /* Sidebar — dùng lại CSS từ list.html, hoặc extract ra file riêng */
+        .admin-sidebar { width:230px; flex-shrink:0; background:#16213e; display:flex; flex-direction:column; padding:24px 0; position:sticky; top:0; height:100vh; }
+        .sidebar-brand { padding:0 20px 24px; font-size:16px; font-weight:700; color:#e94560; border-bottom:1px solid #2a2a4a; }
+        .sidebar-nav { flex:1; padding:16px 0; }
+        .sidebar-link { display:flex; align-items:center; gap:10px; padding:10px 20px; color:#aaa; text-decoration:none; border-left:3px solid transparent; transition:all .15s; }
+        .sidebar-link:hover { color:white; background:rgba(255,255,255,.05); text-decoration:none; }
+        .sidebar-link.active { color:#e94560; border-left-color:#e94560; background:rgba(233,69,96,.08); }
+        .sidebar-footer { padding:16px 0; border-top:1px solid #2a2a4a; }
+
+        .admin-main { flex:1; padding:28px 32px; }
+
+        .form-card { background:#16213e; border-radius:16px; padding:28px; }
+
+        .form-card .form-control {
+            background: #0f3460; border: 1px solid #2a2a4a;
+            color: white; border-radius: 8px;
+        }
+        .form-card .form-control:focus {
+            background:#0f3460; border-color:#e94560;
+            color:white; box-shadow:0 0 0 2px rgba(233,69,96,.2);
+        }
+        .form-card label { font-size:13px; color:#aaa; margin-bottom:4px; }
+        .form-card textarea.form-control { resize: vertical; }
+
+        /* Poster upload */
+        .poster-zone {
+            width: 100%; aspect-ratio: 2/3; max-height: 320px;
+            border: 2px dashed #2a2a4a; border-radius: 12px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            cursor: pointer; position: relative; overflow: hidden;
+            background: #0f3460; transition: border-color .2s;
+        }
+        .poster-zone:hover { border-color: #e94560; }
+        .poster-zone img {
+            width:100%; height:100%; object-fit:cover; position:absolute; inset:0;
+        }
+        .poster-overlay {
+            position:absolute; inset:0; background:rgba(0,0,0,.5);
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            opacity:0; transition:opacity .2s;
+        }
+        .poster-zone:hover .poster-overlay { opacity:1; }
+        .poster-placeholder { color:#555; font-size:36px; text-align:center; }
+
+        /* Genre checkboxes */
+        .genre-grid { display:flex; flex-wrap:wrap; gap:8px; }
+        .genre-chip {
+            position: relative;
+        }
+        .genre-chip input[type="checkbox"] { display: none; }
+        .genre-chip label {
+            display: inline-block;
+            padding: 5px 14px;
+            background: #0f3460; color: #aaa;
+            border: 1px solid #2a2a4a; border-radius: 20px;
+            cursor: pointer; font-size: 13px; margin: 0;
+            transition: all .15s;
+            user-select: none;
+        }
+        .genre-chip input:checked + label {
+            background: rgba(233,69,96,.2);
+            border-color: #e94560;
+            color: #e94560;
+        }
+
+        .section-divider {
+            border: none; border-top: 1px solid #2a2a4a;
+            margin: 24px 0;
+        }
+        .section-title { font-size:14px; font-weight:600; color:#e94560; margin-bottom:16px; }
+
+        .btn-save   { background:#e94560; border:none; color:white; padding:10px 32px; border-radius:8px; font-weight:600; }
+        .btn-save:hover { background:#c73652; }
+        .btn-cancel { background:#0f3460; border:none; color:#aaa; padding:10px 24px; border-radius:8px; }
+        .btn-cancel:hover { color:white; }
+    </style>
+</head>
+<body>
+
+<div class="admin-wrapper">
+
+    <div th:replace="~{layouts/admin-sidebar :: sidebar}"></div>
+
+    <div class="admin-main">
+
+        <!-- Breadcrumb -->
+        <div style="margin-bottom:20px; font-size:13px; color:#666;">
+            <a th:href="@{/cinema/admin/movies}" style="color:#aaa;">Quản lý phim</a>
+            <span style="margin:0 8px;">›</span>
+            <span th:text="${isEdit} ? 'Chỉnh sửa phim' : 'Thêm phim mới'" style="color:white;"></span>
+        </div>
+
+        <form th:action="@{/cinema/admin/movies/save}"
+              th:object="${movieForm}"
+              method="post"
+              enctype="multipart/form-data">
+
+            <!-- Hidden ID khi edit -->
+            <input type="hidden" th:field="*{movieId}">
+
+            <div class="row">
+
+                <!-- ══ CỘT TRÁI: Poster ══ -->
+                <div class="col-md-3">
+                    <div class="form-card" style="position:sticky; top:20px;">
+                        <div class="section-title">Poster phim</div>
+
+                        <!-- Zone click để chọn ảnh -->
+                        <div class="poster-zone" onclick="document.getElementById('posterFileInput').click()">
+
+                            <img id="posterPreview"
+                                 th:if="${movieForm.posterUrl != null}"
+                                 th:src="${movieForm.posterUrl}"
+                                 alt="poster preview">
+
+                            <div class="poster-placeholder" th:unless="${movieForm.posterUrl != null}">
+                                🎬<br>
+                                <span style="font-size:13px; color:#555; margin-top:8px; display:block;">
+                                    Click để chọn ảnh
+                                </span>
+                            </div>
+
+                            <div class="poster-overlay">
+                                <span style="font-size:28px;">📷</span>
+                                <span style="color:white; font-size:13px; margin-top:4px;">Đổi poster</span>
+                            </div>
+                        </div>
+
+                        <input th:field="*{posterFile}" type="file" id="posterFileInput" name="posterFile"
+                               accept="image/*" style="display:none;">
+
+                        <hr class="section-divider">
+
+                        <!-- Hoặc nhập URL -->
+                        <div class="form-group">
+                            <label>Hoặc dán URL poster</label>
+                            <input type="text" class="form-control" th:field="*{posterUrl}"
+                                   placeholder="https://..." id="posterUrlInput">
+                            <small style="color:#555; font-size:11px;">File upload sẽ được ưu tiên hơn URL</small>
+                        </div>
+
+                        <hr class="section-divider">
+
+                        <div class="form-group">
+                            <label>URL Trailer (YouTube)</label>
+                            <input type="text" class="form-control" th:field="*{trailerUrl}"
+                                   placeholder="https://youtube.com/...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══ CỘT PHẢI: Thông tin phim ══ -->
+                <div class="col-md-9">
+                    <div class="form-card">
+
+                        <!-- Tên phim — full width -->
+                        <div class="form-group">
+                            <label>Tên phim <span style="color:#e94560;">*</span></label>
+                            <input type="text" class="form-control"
+                                   th:field="*{movieTitle}"
+                                   th:classappend="${#fields.hasErrors('movieTitle')} ? ' is-invalid'"
+                                   placeholder="Nhập tên phim...">
+                            <div class="invalid-feedback" th:errors="*{movieTitle}"></div>
+                        </div>
+
+                        <!-- Hàng 1: Thời lượng | Đạo diễn | Giới hạn tuổi -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label>Thời lượng (phút) <span style="color:#e94560;">*</span></label>
+                                <input type="number" class="form-control"
+                                       th:field="*{durations}"
+                                       th:classappend="${#fields.hasErrors('durations')} ? ' is-invalid'"
+                                       placeholder="120" min="1" max="300">
+                                <div class="invalid-feedback" th:errors="*{durations}"></div>
+                            </div>
+
+                            <div class="form-group col-md-5">
+                                <label>Đạo diễn</label>
+                                <input type="text" class="form-control"
+                                       th:field="*{director}"
+                                       placeholder="Tên đạo diễn">
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label>Giới hạn tuổi</label>
+                                <select class="form-control" th:field="*{ratingAge}">
+                                    <option value="">—</option>
+                                    <option value="P">P (Mọi tuổi)</option>
+                                    <option value="K">K (Dưới 13)</option>
+                                    <option value="T13">T13 (13+)</option>
+                                    <option value="T16">T16 (16+)</option>
+                                    <option value="T18">T18 (18+)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group col-md-2">
+                                <label>Trạng thái <span style="color:#e94560;">*</span></label>
+                                <select class="form-control" th:field="*{status}"
+                                        th:classappend="${#fields.hasErrors('status')} ? ' is-invalid'">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="NOW_SHOWING">Đang chiếu</option>
+                                    <option value="UPCOMING">Sắp chiếu</option>
+                                    <option value="STOPPED">Ngừng chiếu</option>
+                                </select>
+                                <div class="invalid-feedback" th:errors="*{status}"></div>
+                            </div>
+                        </div>
+
+                        <!-- Hàng 2: Ngày ra mắt | Diễn viên -->
+                        <div class="form-row">
+                            <div class="form-group col-md-3">
+                                <label>Ngày ra mắt <span style="color:#e94560;">*</span></label>
+                                <input type="date" class="form-control"
+                                       th:field="*{releasedDate}"
+                                       th:classappend="${#fields.hasErrors('releasedDate')} ? ' is-invalid'">
+                                <div class="invalid-feedback" th:errors="*{releasedDate}"></div>
+                            </div>
+
+                            <div class="form-group col-md-9">
+                                <label>Diễn viên</label>
+                                <input type="text" class="form-control"
+                                       th:field="*{casts}"
+                                       placeholder="Tên diễn viên, cách nhau bằng dấu phẩy">
+                            </div>
+                        </div>
+
+                        <!-- Mô tả -->
+                        <div class="form-group">
+                            <label>Mô tả phim</label>
+                            <textarea class="form-control" th:field="*{description}"
+                                      rows="4" placeholder="Nội dung tóm tắt..."></textarea>
+                        </div>
+
+                        <hr class="section-divider">
+
+                        <!-- Thể loại checkboxes -->
+                        <div class="section-title">Thể loại phim</div>
+                        <div class="genre-grid mb-4">
+                            <div th:each="genre : ${allGenres}" class="genre-chip">
+                                <input type="checkbox"
+                                       th:id="'genre_' + ${genre.genresId}"
+                                       name="genreIds"
+                                       th:value="${genre.genresId}"
+                                       th:checked="${movieForm.genreIds != null and movieForm.genreIds.contains(genre.genresId)}">
+                                <label th:for="'genre_' + ${genre.genresId}"
+                                       th:text="${genre.genresName}">
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex gap-2" style="gap:12px;">
+                            <button type="submit" class="btn btn-save">
+                                <span th:text="${isEdit} ? ' Lưu thay đổi' : '➕ Thêm phim'"></span>
+                            </button>
+                            <a th:href="@{/cinema/admin/movies}" class="btn btn-cancel">Hủy</a>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div><!-- row -->
+        </form>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script>
+    // Preview poster khi chọn file
+    document.getElementById('posterFileInput').addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file || !file.type.startsWith('image/')) return;
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            let img = document.getElementById('posterPreview');
+            if (!img) {
+                // Tạo mới nếu chưa có
+                img = document.createElement('img');
+                img.id = 'posterPreview';
+                img.alt = 'poster preview';
+                document.querySelector('.poster-placeholder')?.remove();
+                document.querySelector('.poster-zone').prepend(img);
+            }
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Preview poster khi nhập URL
+    document.getElementById('posterUrlInput')?.addEventListener('blur', function () {
+        const url = this.value.trim();
+        if (!url) return;
+        let img = document.getElementById('posterPreview');
+        if (!img) {
+            img = document.createElement('img');
+            img.id = 'posterPreview';
+            img.alt = 'poster preview';
+            document.querySelector('.poster-placeholder')?.remove();
+            document.querySelector('.poster-zone').prepend(img);
+        }
+        img.src = url;
+    });
+</script>
+</body>
+</html>

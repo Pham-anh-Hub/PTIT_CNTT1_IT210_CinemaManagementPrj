@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title th:text="${movie.movieTitle}">Chi tiết phim</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" th:href="@{/css/home-page.css}">
+    <style>
+        body { background-color: #121212; color: white; }
+        .movie-header { background: linear-gradient(to bottom, rgba(0,0,0,0.5), #121212); background-size: cover; padding: 50px 0; }
+        .poster-img { width: 100%; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .btn-time { border: 1px solid #444; color: white; background: #1a1a1a; transition: 0.3s; }
+        .btn-time:hover { background: #ffc107; color: black; }
+        .rating-badge { background: #444; color: white; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{layouts/navbar::navbar}"></div>
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-4 col-lg-3">
+            <img th:src="${movie.posterUrl}" class="poster-img" alt="Poster" style="width: 100%; border-radius: 12px;">
+        </div>
+        <div class="col-md-8 col-lg-9">
+            <div class="d-flex align-items-center mb-2">
+                <h1 class="me-3" th:text="${movie.movieTitle}">Tên phim</h1>
+                <span class="rating-badge" th:text="${movie.ratingAge}">2D</span>
+            </div>
+            <p class="mb-1"><strong>Thời lượng:</strong> [[${movie.durations}]] phút</p>
+            <p class="mb-1"><strong>Đạo diễn:</strong> [[${movie.director}]]</p>
+            <p class="mb-1"><strong>Diễn viên:</strong> [[${movie.casts}]]</p>
+            <p class="mb-3"><strong>Khởi chiếu:</strong>
+                <span th:text="${#temporals.format(movie.releasedDate, 'dd/MM/yyyy')}"></span>
+            </p>
+            <div class="my-4">
+                <p th:text="${movie.description}"></p>
+            </div>
+            <div class="d-flex gap-3">
+                <a th:href="${movie.trailerUrl}" class="btn btn-outline-light rounded-pill">▶ Xem trailer</a>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-5 border-secondary">
+
+    <h4 class="mb-4">Lịch chiếu</h4>
+    <div class="row">
+        <div th:each="st : ${movie.showTimes}" class="col-auto mb-3">
+            <a th:href="@{/cinema/booking/select-seat(movieId=${movie.movieId}, showId=${st.showId})}"
+               class="btn btn-time px-4 py-2"
+               th:classappend="${selectedShow != null && selectedShow.showId == st.showId ? 'btn-danger' : 'btn-outline-danger'}">
+                <span th:text="${#temporals.format(st.startAt, 'HH:mm')}"></span>
+            </a>
+        </div>
+    </div>
+    <div th:if="${selectedShow != null}" class="mt-5 p-4 bg-dark rounded">
+        <h4 class="text-center text-light mb-4">Sơ đồ ghế - Phòng [[${selectedShow.room.roomName}]]</h4>
+
+        <div class="text-center mb-5">
+            <div class="mx-auto" style="height: 5px; background: #ff9800; width: 70%; box-shadow: 0 10px 20px rgba(255,152,0,0.4);"></div>
+            <small class="text-secondary">MÀN HÌNH</small>
+        </div>
+        <div class="seat-grid mx-auto" th:style="'display: grid; grid-template-columns: repeat(' + ${columns} + ', 1fr); gap: 8px; max-width: 800px;'">
+            <div th:each="seat : ${seatMap}">
+
+                <div th:if="${seat.isBooked}"
+                     class="seat text-center rounded"
+                     style="background: #333; color: #555; padding: 5px; cursor: not-allowed;">
+                    [[${seat.seatName}]]
+                </div>
+
+                <a th:unless="${seat.isBooked}"
+                   th:href="@{/cinema/booking/select-seat(movieId=${movie.movieId}, showId=${selectedShow.showId}, toggleSeat=${seat.seatId})}"
+                   class="seat text-center rounded text-decoration-none text-light"
+                   style="padding: 5px; display: block; font-size: 12px;"
+                   th:classappend="${seat.isSelecting ? 'bg-primary' : (seat.seatLevel.name() == 'VIP' ? 'bg-warning' : 'bg-secondary')}">
+                    [[${seat.seatName}]]
+                </a>
+
+            </div>
+        </div>
+        <div class="d-flex justify-content-center gap-4 mt-4 mb-2 text-light small">
+            <div><span class="d-inline-block rounded me-1" style="width:15px; height:15px; background: #6c757d;"></span> Ghế thường</div>
+            <div><span class="d-inline-block rounded me-1" style="width:15px; height:15px; background: #ffc107;"></span> Ghế VIP</div>
+            <div><span class="d-inline-block rounded me-1" style="width:15px; height:15px; background: #0d6efd;"></span> Ghế đang chọn</div>
+            <div><span class="d-inline-block rounded me-1" style="width:15px; height:15px; background: #333;"></span> Ghế đã bán</div>
+        </div>
+        <form th:action="@{/cinema/booking/confirm}" method="get" class="mt-5 border-top border-secondary pt-3 d-flex justify-content-between align-items-center">
+            <div class="text-light">
+                Ghế chọn: <strong class="text-info" th:text="${#strings.listJoin(selectedSeatNames, ', ')}"></strong><br>
+                Tổng tiền: <strong class="text-warning" th:text="${#numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'"></strong>
+            </div>
+            <p th:text="${'Số vé đã đặt ' + selectedSeatNames.size()}"></p>
+            <button type="submit" class="btn btn-danger px-5" th:disabled="${#lists.isEmpty(selectedSeatNames)}">
+                ĐẶT VÉ NGAY
+            </button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

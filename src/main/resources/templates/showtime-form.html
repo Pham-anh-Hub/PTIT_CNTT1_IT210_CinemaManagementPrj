@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Suất chiếu</title>
+<!--    <link rel="stylesheet" th:href="@{/css/admin.css}"/>-->
+    <link rel="stylesheet" th:href="@{/css/admin-lists.css}"/>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+</head>
+<style>
+    .main-content{
+        padding: 2rem;
+        background: #1f2e49;
+        width: 100%;
+        display: block;
+        color: white;
+    }
+    /* Card bao bọc form */
+    .form-card {
+        background: #1a1d21;
+        padding: 2rem; /* Tăng padding một chút cho cân xứng với độ rộng mới */
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        /* CHỈNH SỬA TẠI ĐÂY */
+        max-width: 100%;
+        width: 100%;       /* Chiếm toàn bộ chiều ngang container cha */
+        box-sizing: border-box;
+    }
+
+    /* Style cho input, select */
+    .form-group input,
+    .form-group select {
+        background: #2c3036;
+        border: 1px solid #3f444c;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        color: #fff;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+
+        /* ĐẢM BẢO RỘNG HẾT FORM */
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Nếu bạn muốn các nút bấm nằm bên phải khi form rộng ra */
+    .form-actions {
+        display: flex;
+        justify-content: flex-start; /* Giữ bên trái như cũ hoặc đổi thành flex-end nếu muốn sang phải */
+        gap: 1rem;
+        margin-top: 2rem;
+        border-top: 1px solid #3f444c;
+        padding-top: 1.5rem;
+    }
+</style>
+<body>
+
+<div th:replace="~{layouts/admin-sidebar :: sidebar}"></div>
+
+<main class="main-content" >
+
+    <div class="page-header">
+        <h1 th:text="${showId != null} ? '✏ Sửa Suất chiếu' : '+ Thêm Suất chiếu'"></h1>
+        <a th:href="@{/admin/showtimes}" class="btn btn-light"><ion-icon name="return-left"></ion-icon> Quay lại</a>
+    </div>
+
+    <div class="alert alert-error text-md" th:if="${error}" th:text="${error}"></div>
+
+    <div class="card form-card">
+        <form
+                style="display: flex;
+        flex-direction: column;
+        gap: 10px;"
+                th:action="${showId != null}
+                 ? '/admin/showtimes/edit/' + ${showId}
+                 : '/admin/showtimes/create'"
+              th:object="${showTimeDTO}"
+              method="post">
+
+            <div class="form-group">
+                <label>Phim</label>
+                <select th:field="*{movieId}" required>
+                    <option value="">-- Chọn phim --</option>
+                    <option th:each="m : ${movies}"
+                            th:value="${m.movieId}"
+                            th:text="${m.movieTitle}">
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Phòng chiếu</label>
+                <select th:field="*{roomId}" required>
+                    <option value="">-- Chọn phòng --</option>
+                    <option th:each="r : ${rooms}"
+                            th:value="${r.roomId}"
+                            th:text="${r.getRoomName()}">
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Thời gian bắt đầu</label>
+                <input type="datetime-local"
+                       th:field="*{startAt}"
+                       required/>
+                <small class="hint">Giờ kết thúc = Giờ bắt đầu + Thời lượng phim + 15 phút dọn phòng</small>
+            </div>
+
+            <div class="form-group">
+                <label>Giá vé cơ bản (VNĐ)</label>
+                <div style="position: relative;">
+                    <input type="number" th:field="*{basePrice}"
+                           style="width: 100%;"
+                           placeholder="VD: 85000" min="0" step="1000" required/>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"
+                        th:text="${showId != null} ? 'Cập nhật' : 'Tạo suất chiếu'">
+                </button>
+                <a th:href="@{/admin/showtimes}" class="btn btn-ghost">Hủy</a>
+            </div>
+
+        </form>
+    </div>
+
+</main>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+<script src="https://unpkg.com/ionicons@4.5.10-0/dist/ionicons.js"></script>
+
+</body>
+</html>

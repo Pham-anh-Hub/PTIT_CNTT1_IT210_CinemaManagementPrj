@@ -1,0 +1,46 @@
+/* Tông màu tối giống National Cinema */
+body {
+    background-color: #242f47; /* Màu nền xanh đen đậm */
+}
+
+.history-header h3 {
+    letter-spacing: 1px;
+    font-size: 1.5rem;
+}
+
+.underline {
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(to right, #e94560, #fb8500);
+    border-radius: 2px;
+}
+
+.history-card {
+    background-color: #1a2235; /* Màu card hơi sáng hơn nền */
+    border-radius: 15px;
+    overflow: hidden;
+    border: 1px solid #2d3748;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.table-dark {
+    background-color: transparent !important;
+}
+
+.table thead th {
+    background-color: #242f47;
+    color: #cbd5e1;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #334155;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #2d3748 !important;
+}
+
+.table td {
+    border-color: #334155;
+    color: #e2e8f0;
+}

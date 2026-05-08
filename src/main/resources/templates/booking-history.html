@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Title</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" th:href="@{/css/booking-list.css}">
+    <link rel="stylesheet" th:href="@{/css/home-page.css}">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body style="background-color: #242f47">
+
+<div th:replace="~{layouts/navbar::navbar}"></div>
+
+
+<div class="container mt-5 mb-5">
+    <div class="history-header mb-4">
+        <h3 class="text-uppercase fw-bold text-white">Tra cứu Lịch sử đặt vé</h3>
+        <div class="underline"></div>
+    </div>
+
+    <div class="history-card">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0">
+                <thead>
+                <tr>
+                    <th scope="col" class="py-3 px-4">Ngày giao dịch</th>
+                    <th scope="col" class="py-3">Tên phim</th>
+                    <th scope="col" class="py-3">Loại giao dịch</th>
+                    <th scope="col" class="py-3">Số vé</th>
+                    <th scope="col" class="py-3 text-end px-4">Số tiền</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="booking : ${bookings}" class="align-middle">
+                    <td class="px-4" th:text="${#temporals.format(booking.createdAt, 'dd/MM/yyyy HH:mm')}">12/04/2024</td>
+                    <td>
+                        <div class="fw-bold text-info" th:text="${booking.showtime.movie.title}">Lật Mặt 7: Một Điều Ước</div>
+                        <small class="text-muted" th:text="${booking.showtime.room.roomName + ' - Ghế: ' + booking.seats}">Phòng 05 - Ghế: A12, A13</small>
+                    </td>
+                    <td>Đặt vé trực tuyến</td>
+                    <td th:text="${booking.ticketCount}">2</td>
+                    <td class="text-end px-4 fw-bold text-warning"
+                        th:text="${#numbers.formatDecimal(booking.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}">
+                        160.000 đ
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(bookings)}">
+                    <td colspan="5" class="text-center py-5">
+                        <p class="text-muted mb-0">Không có dữ liệu</p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+</body>
+</html>

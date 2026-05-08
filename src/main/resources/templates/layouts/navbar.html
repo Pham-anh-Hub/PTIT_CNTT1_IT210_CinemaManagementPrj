@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Title</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" th:href="@{/css/home-page.css}">
+</head>
+<body>
+
+<nav th:fragment="navbar"
+     class="cinema-navbar"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+     style="display: flex; align-items: center; justify-content: space-between">
+
+    <!-- LOGO -->
+    <div class="logo-wrapper">
+        <div class="logo-box">
+            <img src="https://www.shutterstock.com/image-vector/cinema-building-flat-style-isolated-600nw-2537915939.jpg"
+                 alt="Cinema Center">
+        </div>
+        <div class="logo-text">
+            CINEMA <br/> CENTER
+        </div>
+    </div>
+
+    <!-- MENU -->
+    <ul class="nav-menu">
+        <li class="active"><a th:href="@{/home}">Trang chủ</a></li>
+        <li><a th:href="@{/user/booking-list}">Lịch sử đặt vé</a></li>
+    </ul>
+
+    <!-- CHƯA ĐĂNG NHẬP -->
+    <div sec:authorize="isAnonymous()" class="auth-buttons">
+        <a class="btn-register" th:href="@{/auth/register}">
+            Đăng ký
+        </a>
+        <a class="btn-login" th:href="@{/auth/login}"
+           style="text-decoration: none; color: white">
+            Đăng nhập
+        </a>
+    </div>
+
+    <!-- ĐÃ ĐĂNG NHẬP -->
+    <div sec:authorize="isAuthenticated()"
+         style="display: flex; align-items: center; gap: 12px;">
+
+        <!-- Thông tin user -->
+        <a th:href="@{/cinema/profile}" style="display: flex; align-items: center; gap: 10px; color: white;">
+
+            <!-- Avatar: chỉ hiện nếu principal của bạn có field avatar -->
+            <img th:src="${#authentication.principal.avatar != null && #authentication.principal.avatar.contains('http')}
+     ? ${#authentication.principal.avatar}
+     : '/images/' + ${#authentication.principal.avatar}"
+                 alt="User Avatar"
+                 class="rounded-circle"
+                 style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+
+            <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                <span style="font-weight: 600;"
+                      th:text="${#authentication.principal.fullName != null ? #authentication.principal.fullName : #authentication.name}">
+                </span>
+
+                <small th:text="${#authentication.name}"></small>
+            </div>
+        </a>
+
+        <!-- Logout -->
+        <a th:href="@{/auth/logout}"
+           style="color: white; font-size: 20px;">
+            <ion-icon name="log-out-outline"></ion-icon>
+        </a>
+    </div>
+
+</nav>
+<script src="https://unpkg.com/ionicons@4.5.10-0/dist/ionicons.js"></script>
+</body>
+</html>

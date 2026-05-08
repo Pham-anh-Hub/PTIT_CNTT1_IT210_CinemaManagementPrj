@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Title</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<style>
+    /* =========================
+   LOGO
+========================= */
+
+    .logo-wrapper{
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .logo-box{
+        width: 60px;
+        height: 40px;
+
+        background: white;
+        border-radius: 12px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        overflow: hidden;
+    }
+
+    .logo-box img{
+        width: 60px;
+        height: 40px;
+        object-fit: cover;
+    }
+
+    .logo-text{
+        color: white;
+        line-height: 1.1;
+        font-weight: bold;
+        font-size: 12px;
+    }
+    /* Sidebar */
+    .admin-sidebar {
+        width: 230px; flex-shrink: 0;
+        background: #16213e;
+        display: flex; flex-direction: column;
+        padding: 24px 0;
+        position: sticky; top: 0; height: 100vh;
+    }
+    .sidebar-brand {
+        padding: 0 20px 24px;
+        font-size: 16px; font-weight: 700; color: #e94560;
+        border-bottom: 1px solid #2a2a4a;
+    }
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .sidebar-link {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 20px;
+        color: #aaa; text-decoration: none;
+        border-left: 3px solid transparent;
+        transition: all .15s;
+    }
+    .sidebar-link:hover { color: white; background: rgba(255,255,255,.05); text-decoration: none; }
+    .sidebar-link.active { color: #e94560; border-left-color: #e94560; background: rgba(233,69,96,.08); }
+    .sidebar-footer { padding: 16px 0; border-top: 1px solid #2a2a4a; }
+    .search-bar .form-control:focus { border-color: #e94560; box-shadow: none; color: white; background: #0f3460; }
+
+</style>
+<body>
+
+<div th:fragment="sidebar" class="admin-sidebar">
+    <!-- LOGO -->
+    <div class="logo-wrapper" style="display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;">
+        <div class="logo-box" style="">
+            <img style="width: 80px;
+            height: 60px;
+            object-fit: cover; border-radius: 12px;" src="https://www.shutterstock.com/image-vector/cinema-building-flat-style-isolated-600nw-2537915939.jpg"
+                 alt="Cinema Center">
+        </div>
+        <div class="logo-text">
+            CINEMA <br/> CENTER
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <a th:href="@{/cinema/admin/movies}"
+           class="sidebar-link">
+            <span class="icon">🎬</span> Quản lý Phim
+        </a>
+        <a th:href="@{/admin/showtimes}"
+           class="sidebar-link">
+            <span class="icon">🕐</span> Suất chiếu
+        </a>
+        <a th:href="@{/admin/users}"
+           class="sidebar-link">
+            <span class="icon">👥</span> Người dùng
+        </a>
+    </nav>
+    <div class="sidebar-footer">
+        <a th:href="@{/cinema/profile}" class="admin-info" style="display: flex; align-items: center; margin-bottom: 1rem; margin-left: 1rem">
+            <div class="admin-details" style="display: flex; flex-direction: column;">
+                <span class="admin-name" style="color: #fff; font-size: 0.9rem; font-weight: 600;" th:text="${#authentication.name}">Admin</span>
+                <span class="admin-role" style="color: #94a3b8; font-size: 0.75rem;">Quản trị viên</span>
+            </div>
+        </a>
+
+        <form id="logoutForm" th:action="@{/logout}" method="post" style="display: none;"></form>
+
+        <a th:href="@{/auth/logout}" class="sidebar-link" style="color: #ff7675 !important;"
+           onclick="if(confirm('Bạn có chắc chắn muốn đăng xuất?')) document.getElementById('logoutForm').submit(); return false;">
+            <span class="icon">🚪</span> Đăng xuất
+        </a>
+    </div>
+</div>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+</body>
+</html>

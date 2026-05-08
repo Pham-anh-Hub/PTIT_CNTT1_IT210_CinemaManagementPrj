@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý phim</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { background: #0f0f1a; color: #e0e0e0; margin: 0; font-family: sans-serif; }
+
+        /* Layout */
+        .admin-wrapper { display: flex; min-height: 100vh; }
+
+        /* Main */
+        .admin-main { flex: 1; padding: 28px 32px; overflow-y: auto; }
+
+        .page-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px;
+        }
+        .page-title { font-size: 22px; font-weight: 700; color: white; margin: 0; }
+
+        /* Sidebar */
+        .admin-sidebar {
+            width: 230px; flex-shrink: 0;
+            background: #16213e;
+            display: flex; flex-direction: column;
+            padding: 24px 0;
+            position: sticky; top: 0; height: 100vh;
+        }
+        .sidebar-brand {
+            padding: 0 20px 24px;
+            font-size: 16px; font-weight: 700; color: #e94560;
+            border-bottom: 1px solid #2a2a4a;
+        }
+        .sidebar-nav { flex: 1; padding: 16px 0; }
+        .sidebar-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 20px;
+            color: #aaa; text-decoration: none;
+            border-left: 3px solid transparent;
+            transition: all .15s;
+        }
+        .sidebar-link:hover { color: white; background: rgba(255,255,255,.05); text-decoration: none; }
+        .sidebar-link.active { color: #e94560; border-left-color: #e94560; background: rgba(233,69,96,.08); }
+        .sidebar-footer { padding: 16px 0; border-top: 1px solid #2a2a4a; }
+        .search-bar .form-control:focus { border-color: #e94560; box-shadow: none; color: white; background: #0f3460; }
+
+
+        /* Stats cards */
+        .stats-row { display: flex; gap: 16px; margin-bottom: 24px; }
+        .stat-card {
+            flex: 1; background: #16213e;
+            border-radius: 12px; padding: 18px 20px;
+            border-left: 4px solid;
+        }
+        .stat-card.total  { border-color: #4a9eff; }
+        .stat-card.showing { border-color: #4caf50; }
+        .stat-card.upcoming { border-color: #ff9800; }
+        .stat-num  { font-size: 28px; font-weight: 700; color: white; }
+        .stat-label { font-size: 12px; color: #888; margin-top: 2px; }
+
+        /* Search bar */
+        .search-bar {
+            background: #16213e; border-radius: 12px;
+            padding: 16px 20px; margin-bottom: 20px;
+            display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;
+        }
+        .search-bar .form-group { margin: 0; flex: 1; min-width: 160px; }
+        .search-bar label { font-size: 12px; color: #888; margin-bottom: 4px; display: block; }
+        .search-bar .form-control {
+            background: #0f3460; border: 1px solid #2a2a4a;
+            color: white; border-radius: 8px;
+        }
+        .search-bar .form-control:focus { border-color: #e94560; box-shadow: none; color: white; background: #0f3460; }
+
+        /* Table */
+        .table-card { background: #16213e; border-radius: 12px; overflow: hidden; }
+        .table { margin: 0; color: #ddd; }
+        .table thead th {
+            background: #0f3460; color: #aaa;
+            font-size: 12px; text-transform: uppercase;
+            border: none; padding: 12px 16px;
+        }
+        .table tbody tr { border-bottom: 1px solid #1e2a4a; }
+        .table tbody tr:hover { background: rgba(255,255,255,.03); }
+        .table tbody td { padding: 12px 16px; vertical-align: middle; border: none; }
+
+        .poster-thumb {
+            width: 48px; height: 68px;
+            object-fit: cover; border-radius: 6px;
+        }
+        .movie-title { font-weight: 600; color: white; font-size: 14px; }
+        .movie-meta  { font-size: 12px; color: #888; margin-top: 2px; }
+
+        .badge-genre {
+            display: inline-block; padding: 2px 8px;
+            background: #0f3460; border-radius: 10px;
+            font-size: 11px; color: #7eb8ff; margin: 1px;
+        }
+
+        /* Status badges */
+        .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-NOW_SHOWING { background: rgba(76,175,80,.2);  color: #4caf50; }
+        .status-UPCOMING    { background: rgba(255,152,0,.2);  color: #ff9800; }
+        .status-STOPPED     { background: rgba(158,158,158,.2); color: #9e9e9e; }
+
+        .rating-badge {
+            padding: 2px 8px; border-radius: 4px;
+            font-size: 11px; font-weight: 700;
+            background: #e94560; color: white;
+        }
+
+        /* Buttons */
+        .btn-add-movie {
+            background: #e94560; color: white;
+            border: none; border-radius: 8px;
+            padding: 9px 20px; font-weight: 600;
+            text-decoration: none; font-size: 14px;
+        }
+        .btn-add-movie:hover { background: #c73652; color: white; text-decoration: none; }
+        .btn-edit   { background: #0f3460; color: #7eb8ff; border: none; border-radius: 6px; padding: 5px 12px; font-size: 12px; }
+        .btn-delete { background: rgba(233,69,96,.15); color: #e94560; border: none; border-radius: 6px; padding: 5px 12px; font-size: 12px; }
+        .btn-edit:hover   { background: #4a9eff; color: white; }
+        .btn-delete:hover { background: #e94560; color: white; }
+
+        .empty-state { text-align: center; padding: 60px; color: #555; }
+        .flash-msg { border-radius: 8px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="admin-wrapper">
+
+    <!-- Sidebar -->
+    <div th:replace="~{layouts/admin-sidebar :: sidebar}"></div>
+
+    <!-- Main content -->
+    <div class="admin-main">
+
+        <!-- Flash messages -->
+        <div th:if="${successMsg}" class="alert alert-success flash-msg" th:text="${successMsg}"></div>
+        <div th:if="${errorMsg}"   class="alert alert-danger flash-msg"  th:text="${errorMsg}"></div>
+
+        <!-- Header -->
+        <div class="page-header">
+            <h1 class="page-title">🎬 Quản lý phim</h1>
+            <a th:href="@{/cinema/admin/movies/add}" class="btn-add-movie">+ Thêm phim mới</a>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card total">
+                <div class="stat-num" th:text="${totalMovies}">0</div>
+                <div class="stat-label">Tổng số phim</div>
+            </div>
+            <div class="stat-card showing">
+                <div class="stat-num" th:text="${nowShowing}">0</div>
+                <div class="stat-label">Đang chiếu</div>
+            </div>
+            <div class="stat-card upcoming">
+                <div class="stat-num" th:text="${upcoming}">0</div>
+                <div class="stat-label">Sắp chiếu</div>
+            </div>
+        </div>
+
+        <!-- Search & Filter -->
+        <form th:action="@{/cinema/admin/movies}" method="get" class="search-bar">
+            <div class="form-group">
+                <label>Tìm kiếm</label>
+                <input type="text" name="keyword" class="form-control"
+                       placeholder="Tên phim..."
+                       th:value="${keyword}">
+            </div>
+            <div class="form-group" style="max-width:180px;">
+                <label>Trạng thái</label>
+                <select name="status" class="form-control">
+                    <option value="">-- Tất cả --</option>
+                    <option th:each="s : ${statuses}"
+                            th:value="${s}"
+                            th:text="${s.label}"
+                            th:selected="${s == filterStatus}">
+                    </option>
+                </select>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary" style="border-radius:8px;">Tìm</button>
+                <a th:href="@{/cinema/admin/movies}" class="btn btn-secondary ml-1" style="border-radius:8px;">Reset</a>
+            </div>
+        </form>
+
+        <!-- Table -->
+        <div class="table-card">
+            <div th:if="${movies == null or movies.isEmpty()}" class="empty-state">
+                <p style="font-size:40px;">🎬</p>
+                <p>Chưa có phim nào. <a th:href="@{/cinema/admin/movies/add}" style="color:#e94560;">Thêm ngay</a></p>
+            </div>
+
+            <table th:unless="${movies == null or movies.isEmpty()}" class="table">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Poster</th>
+                    <th>Tên phim</th>
+                    <th>Thể loại</th>
+                    <th>Thời lượng</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày ra mắt</th>
+                    <th>Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="movie, stat : ${movies}">
+                    <td style="color:#555;" th:text="${stat.index + 1}"></td>
+
+                    <td>
+                        <img th:if="${movie.posterUrl != null}"
+                             th:src="${movie.posterUrl.startsWith('http') ? movie.posterUrl : movie.posterUrl}"
+                             class="poster-thumb" alt="poster">
+                        <div th:unless="${movie.posterUrl != null}"
+                             style="width:48px;height:68px;background:#0f3460;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#555;font-size:18px;">
+                            🎬
+                        </div>
+                    </td>
+
+                    <td>
+                        <div class="movie-title" th:text="${movie.movieTitle}"></div>
+                        <div class="movie-meta">
+                            <span th:if="${movie.director}" th:text="'Đạo diễn: ' + ${movie.director}"></span>
+                            <span th:if="${movie.ratingAge}" class="rating-badge ml-1" th:text="${movie.ratingAge}"></span>
+                        </div>
+                    </td>
+
+                    <td>
+                        <span th:each="g : ${movie.genreNames}" class="badge-genre" th:text="${g}"></span>
+                        <span th:if="${movie.genreNames.isEmpty()}" style="color:#555;">—</span>
+                    </td>
+
+                    <td th:text="${movie.durations} + ' phút'"></td>
+
+                    <td>
+                           <span class="status-badge"
+                                 th:classappend="'status-' + ${movie.status}"
+                                 th:text="${movie.status.label}">
+                           </span>
+                    </td>
+
+                    <td th:text="${movie.releasedDate != null ? #temporals.format(movie.releasedDate, 'dd/MM/yyyy') : '—'}"></td>
+
+                    <td>
+                        <a th:href="@{/cinema/admin/movies/edit/{id}(id=${movie.movieId})}"
+                           class="btn-edit mr-1">✏️ Sửa</a>
+
+                        <form th:action="@{/cinema/admin/movies/delete/{id}(id=${movie.movieId})}"
+                              method="post" style="display:inline;">
+                            <button type="submit" class="btn-delete"
+                                    onclick="return confirm('Xóa phim «' + this.closest('tr').querySelector('.movie-title').textContent + '»?')">
+                                🗑️ Xóa
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div><!-- table-card -->
+
+    </div><!-- admin-main -->
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

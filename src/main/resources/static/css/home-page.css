@@ -1,0 +1,253 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    background: #111d2e;
+    font-family: Arial, sans-serif;
+}
+
+/* =========================
+   NAVBAR
+========================= */
+
+.cinema-navbar{
+    width: 100%;
+    height: 95px;
+
+    background: transparent;
+
+    backdrop-filter: blur(10px);
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 80px;
+
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* =========================
+   LOGO
+========================= */
+
+.logo-wrapper{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.logo-box{
+    width: 60px;
+    height: 40px;
+
+    background: white;
+    border-radius: 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+}
+
+.logo-box img{
+    width: 100%;
+    height: 80%;
+    object-fit: cover;
+}
+
+.logo-text{
+    color: white;
+    line-height: 1.1;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+/* =========================
+   MENU
+========================= */
+
+.nav-menu{
+    display: flex;
+    align-items: center;
+    gap: 40px;
+
+    list-style: none;
+
+    margin: 0;
+}
+
+.nav-menu li a{
+    text-decoration: none;
+    color: #f0f0f0;
+
+    font-size: 16px;
+    font-weight: 400;
+
+    transition: 0.3s;
+    position: relative;
+}
+
+.nav-menu li a:hover{
+    color: #ff6b6b;
+
+}
+
+.nav-menu li.active a{
+    color: #ff6b6b;
+}
+
+.nav-menu li.active a::after{
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -18px;
+
+    width: 100%;
+    height: 3px;
+
+    background: #ff6b6b;
+    border-radius: 10px;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.auth-buttons{
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+}
+
+.btn-register{
+    padding: 8px 28px;
+    border-radius: 40px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: transparent;
+    color: white;
+    font-weight: 500;
+    transition: 0.3s;
+    text-decoration: none;
+}
+
+.btn-register:hover{
+    background: rgba(255,255,255,0.08);
+    transform: translateY(-2px);
+    text-decoration: none;
+    color: white;
+
+}
+
+.btn-login{
+    padding: 8px 28px;
+    border: none;
+    border-radius: 40px;
+    background: linear-gradient(
+            90deg,
+            #ff5b6e,
+            #ff6b81
+    );
+    color: white;
+    font-weight: 500;
+
+    box-shadow: 0 0 25px rgba(255, 107, 129, 0.5);
+
+    transition: 0.3s;
+}
+
+.btn-login:hover{
+    text-decoration: none;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.card{
+    transition: ease-in-out 0.5s;
+}
+.card img{
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+.card:hover{
+    transform: scale(1.05);
+}
+.btn-add{
+    background:#4E2CB6;
+    color: white;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 15px;
+    transition: ease-in-out 0.2s;
+    cursor: pointer;
+}
+.btn-add:hover{
+    transform: scale(1.02);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width: 1200px){
+
+    .cinema-navbar{
+        padding: 0 30px;
+    }
+
+    .nav-menu{
+        gap: 24px;
+    }
+
+    .nav-menu li a{
+        font-size: 16px;
+    }
+}
+
+@media(max-width: 992px) {
+
+    .cinema-navbar {
+        flex-direction: column;
+        height: auto;
+        padding: 20px;
+        gap: 20px;
+    }
+
+    .nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+
+
+/* 1. KHỐNG CHẾ CONTAINER TỔNG (Vùng chứa banner)
+   Để đảm bảo toàn bộ Carousel không bao giờ cao quá mức bạn muốn.
+   Con số 480px là lý tưởng cho banner phim dạng ngang. */
+#carouselId .carousel-inner {
+    height: 500px; /* Cố định chiều cao (ví dụ: 450px, 480px, 550px) cho vừa mắt */
+    overflow: hidden; /* QUAN TRỌNG: Cắt bỏ bất cứ thứ gì lọt ra ngoài khung này */
+    border-radius: 16px; /* Bo góc nhẹ để trông sang hơn (giống giao diện của CGV/Lotte) */
+    background-color: #111; /* Nền tối để nếu ảnh quá ngắn sẽ không lộ khoảng trắng */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); /* Tạo chiều sâu và nổi bật */
+}
+
+/* 2. ÉP ẢNH NẰM TRỌN TRONG KHUNG CỐ ĐỊNH */
+#carouselId .carousel-item img {
+    width: 100%; /* Chiều ngang luôn lấp đầy container */
+    height: 480px; /* PHẢI BẰNG chính xác chiều cao của .carousel-inner */
+    object-fit: cover; /* ĐÂY LÀ PHÉP MÀU: Ảnh sẽ tự động cắt gọn để lấp đầy khung
+                          mà không bao giờ bị bóp méo hay kéo giãn ảnh. Nó giữ nguyên tỉ lệ. */
+    object-position: center; /* Luôn tập trung vào phần chính giữa của ảnh */
+}
+
+.carousel-item {
+    transition: transform 0.6s ease-in-out;
+}
