@@ -12,4 +12,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     List<Ticket> findByShowTime_ShowId(Long showId);
     // (Tùy chọn) Nếu bạn muốn kiểm tra nhanh một ghế cụ thể đã có vé chưa
     boolean existsByShowTime_ShowIdAndSeat_SeatId(Long showId, Long seatId);
+
+    void deleteByBookingBookingIdAndSeatSeatId(Long bookingBookingId, Long seatSeatId);
 }

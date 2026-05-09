@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thanh toán - Cinema Center</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/home-page.css}">
+    <style>
+        body {
+            background-color: #121417;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .payment-wrapper {
+            max-width: 680px;
+            margin: 60px auto;
+            padding: 0 16px 60px;
+        }
+
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .orange-line {
+            height: 3px;
+            width: 60px;
+            background: #ff9800;
+            margin-bottom: 32px;
+            box-shadow: 0 0 10px rgba(255,152,0,0.4);
+        }
+
+        /* Summary card */
+        .summary-card {
+            background: #1c1f24;
+            border: 1px solid #2a2d33;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .summary-card .card-header {
+            background: #242830;
+            padding: 14px 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #ff9800;
+            border-bottom: 1px solid #2a2d33;
+        }
+
+        .summary-card .card-body {
+            padding: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 10px 0;
+            border-bottom: 1px solid #2a2d33;
+            font-size: 0.9rem;
+        }
+
+        .info-row:last-child { border-bottom: none; }
+
+        .info-row .label { color: #888; flex-shrink: 0; margin-right: 16px; }
+        .info-row .value { color: #e0e0e0; text-align: right; font-weight: 500; }
+
+        .seat-chip {
+            display: inline-block;
+            background: #2a2d33;
+            border: 1px solid #3a3d45;
+            border-left: 3px solid #ff9800;
+            border-radius: 4px;
+            padding: 3px 10px;
+            font-size: 0.8rem;
+            margin: 2px 3px 2px 0;
+            color: #e0e0e0;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 20px;
+            background: #242830;
+            border-top: 1px solid #2a2d33;
+        }
+
+        .total-label { color: #aaa; font-size: 0.85rem; }
+        .total-amount { color: #ff9800; font-size: 1.4rem; font-weight: 700; }
+
+        /* Payment method */
+        .method-card {
+            background: #1c1f24;
+            border: 1px solid #2a2d33;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .method-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border: 2px solid #2a2d33;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .method-option:hover { border-color: #ff9800; background: rgba(255,152,0,0.05); }
+
+        .method-option input[type="radio"] { accent-color: #ff9800; width: 18px; height: 18px; }
+
+        .method-option .method-name { font-weight: 600; font-size: 0.95rem; }
+        .method-option .method-desc { font-size: 0.8rem; color: #888; }
+
+        /* Error/success alert */
+        .alert-error {
+            background: #2d1a1a;
+            border: 1px solid #7a3030;
+            border-radius: 8px;
+            color: #f08080;
+            padding: 12px 18px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Confirm button */
+        .btn-pay {
+            width: 100%;
+            padding: 16px;
+            background: #ff9800;
+            color: #111;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-pay:hover { background: #e08800; transform: translateY(-1px); }
+
+        .btn-back-link {
+            display: block;
+            text-align: center;
+            margin-top: 14px;
+            color: #666;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .btn-back-link:hover { color: #aaa; }
+
+        .section-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #ff9800;
+            margin-bottom: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{layouts/navbar::navbar}"></div>
+
+<div class="payment-wrapper">
+
+    <div class="page-title">Thanh toán đặt vé</div>
+    <div class="orange-line"></div>
+
+    <!-- Thông báo lỗi -->
+    <div class="alert-error" th:if="${errorMsg}">
+        ⚠ <span th:text="${errorMsg}">Lỗi</span>
+    </div>
+
+    <!-- Thông tin đơn hàng -->
+    <div class="summary-card">
+        <div class="card-header">Thông tin đặt vé</div>
+        <div class="card-body">
+
+            <div class="info-row">
+                <span class="label">Phim</span>
+                <span class="value fw-bold text-white"
+                      th:text="${booking.tickets[0].showTime.movie.movieTitle}">Tên phim</span>
+            </div>
+
+            <div class="info-row">
+                <span class="label">Suất chiếu</span>
+                <span class="value"
+                      th:text="${#temporals.format(booking.tickets[0].showTime.startAt, 'HH:mm - dd/MM/yyyy')}">20:00 - 01/01/2025</span>
+            </div>
+
+            <div class="info-row">
+                <span class="label">Phòng</span>
+                <span class="value"
+                      th:text="${booking.tickets[0].showTime.room.roomName}">Phòng A</span>
+            </div>
+
+            <div class="info-row">
+                <span class="label">Ghế</span>
+                <span class="value">
+                    <span th:each="ticket : ${booking.tickets}" class="seat-chip"
+                          th:text="${ticket.seat.seatName}">A1</span>
+                </span>
+            </div>
+
+            <div class="info-row">
+                <span class="label">Mã đơn</span>
+                <span class="value text-muted" th:text="'#' + ${booking.bookingId}">
+                    #001
+                </span>
+            </div>
+
+        </div>
+
+        <div class="total-row">
+            <span class="total-label">Tổng thanh toán (<span th:text="${#lists.size(booking.tickets)}">0</span> vé)</span>
+            <span class="total-amount"
+                  th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT') + ' đ'}">0 đ</span>
+        </div>
+    </div>
+
+    <!-- Phương thức thanh toán -->
+    <div class="method-card">
+        <div class="section-label">Phương thức thanh toán</div>
+
+        <label class="method-option">
+            <input type="radio" name="paymentMethod" value="cash" checked>
+            <div>
+                <div class="method-name">💵 Thanh toán tại quầy</div>
+                <div class="method-desc">Xuất trình mã đơn khi đến rạp</div>
+            </div>
+        </label>
+
+        <label class="method-option">
+            <input type="radio" name="paymentMethod" value="transfer">
+            <div>
+                <div class="method-name">🏦 Chuyển khoản ngân hàng</div>
+                <div class="method-desc">Chuyển khoản và gửi biên lai qua email</div>
+            </div>
+        </label>
+
+        <label class="method-option">
+            <input type="radio" name="paymentMethod" value="momo">
+            <div>
+                <div class="method-name">📱 Ví MoMo</div>
+                <div class="method-desc">Thanh toán nhanh qua ứng dụng MoMo</div>
+            </div>
+        </label>
+    </div>
+
+    <!-- Nút xác nhận -->
+    <form th:action="@{/cinema/payment/{id}/confirm(id=${booking.bookingId})}" method="POST">
+        <button type="submit" class="btn-pay">
+            Xác nhận thanh toán
+        </button>
+    </form>
+
+    <a th:href="@{/user/booking-list}" class="btn-back-link">← Quay lại lịch sử đặt vé</a>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

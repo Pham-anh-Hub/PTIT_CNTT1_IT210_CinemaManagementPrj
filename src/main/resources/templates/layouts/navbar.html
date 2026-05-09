@@ -31,8 +31,15 @@
 
     <!-- MENU -->
     <ul class="nav-menu">
-        <li class="active"><a th:href="@{/home}">Trang chủ</a></li>
-        <li><a th:href="@{/user/booking-list}">Lịch sử đặt vé</a></li>
+        <!-- Dùng so sánh == an toàn hơn .equals() -->
+        <li th:classappend="${activePage == 'home'} ? 'active' : ''">
+            <a th:href="@{/home}">Trang chủ</a>
+        </li>
+
+        <!-- Không dùng #request. Dùng biến activePage để check active cho đồng bộ -->
+        <li th:classappend="${activePage == 'booking-list'} ? 'active' : ''">
+            <a th:href="@{/user/booking-list}">Lịch sử đặt vé</a>
+        </li>
     </ul>
 
     <!-- CHƯA ĐĂNG NHẬP -->

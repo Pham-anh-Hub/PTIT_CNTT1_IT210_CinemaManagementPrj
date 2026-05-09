@@ -77,7 +77,7 @@ public class ProfileController {
         return "redirect:/home";
     }
 
-    private Long getCurrentUserId(Authentication authentication) {
+     Long getCurrentUserId(Authentication authentication) {
         CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
         return principal.getUser().getUserId();
     }

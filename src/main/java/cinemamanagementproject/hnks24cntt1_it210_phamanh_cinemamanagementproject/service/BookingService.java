@@ -3,10 +3,7 @@ package cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementprojec
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.dto.SeatDTO;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.enums.BookingStatus;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.model.*;
-import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.repository.BookingRepository;
-import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.repository.SeatRepository;
-import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.repository.ShowTimeRepository;
-import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.repository.TicketRepository;
+import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.repository.*;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,15 +15,17 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class BookingService {
 
-     private final BookingRepository bookingRepository;
-     private final TicketRepository ticketRepository;
-     private final ShowTimeRepository showTimeRepository;
-     private final SeatRepository seatRepository;
+    private final BookingRepository bookingRepository;
+    private final TicketRepository ticketRepository;
+    private final ShowTimeRepository showTimeRepository;
+    private final UserRepository userRepository;
+    private final SeatRepository seatRepository;
     private final ShowTimeService showTimeService;
 
     // 1. Xử lý logic chọn/hủy ghế và trả về list ID mới
@@ -97,5 +96,84 @@ public class BookingService {
                 .filter(SeatDTO::isSelecting)
                 .map(SeatDTO::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public List<Booking> getBookingByUserId(Long userId){
+        return bookingRepository.findHistoryByUserId(userId);
+    }
+
+    @Transactional
+    public Booking createPendingBooking(Long userId, Long showId, List<Long> seatIds) {
+
+        // 1. Lấy ShowTime (đã có basePrice, room, movie)
+        ShowTime showTime = showTimeRepository.findById(showId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy suất chiếu"));
+
+        // 2. Lấy User
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
+
+        // 3. Lấy danh sách Seat theo seatIds được chọn
+        List<Seat> seats = seatRepository.findAllById(seatIds);
+
+        // Kiểm tra đủ số ghế (tránh trường hợp seatId không hợp lệ)
+        if (seats.size() != seatIds.size()) {
+            throw new RuntimeException("Một số ghế không tồn tại!");
+        }
+
+        // 4. Kiểm tra từng ghế có bị đặt trong suất chiếu này chưa
+        for (Seat seat : seats) {
+            boolean alreadyBooked = ticketRepository
+                    .existsByShowTime_ShowIdAndSeat_SeatId(showId, seat.getSeatId());
+            if (alreadyBooked) {
+                throw new RuntimeException(
+                        "Ghế " + seat.getSeatName() + " vừa được người khác đặt. Vui lòng chọn ghế khác!"
+                );
+            }
+        }
+
+        // 5. Tính tổng tiền:
+        //    ticketPrice = showTime.basePrice * seat.seatModifier
+        //    Ví dụ: basePrice = 100.000đ, seatModifier = 1.5 (VIP) => 150.000đ
+        BigDecimal basePrice = showTime.getBasePrice();
+
+        BigDecimal totalAmount = seats.stream()
+                .map(seat -> basePrice.multiply(seat.getSeatModifier()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 6. Tạo và lưu Booking với status PENDING
+        Booking booking = new Booking();
+        booking.setUser(user);
+        booking.setBookedAt(LocalDateTime.now());
+        booking.setStatus(BookingStatus.PENDING);
+        booking.setTotalAmount(totalAmount);
+        bookingRepository.save(booking); // Lưu trước để có bookingId
+
+        // 7. Tạo Ticket cho từng ghế
+        List<Ticket> tickets = seats.stream().map(seat -> {
+            Ticket ticket = new Ticket();
+            ticket.setBooking(booking);
+            ticket.setShowTime(showTime);
+            ticket.setSeat(seat);
+            ticket.setTicketPrice(basePrice.multiply(seat.getSeatModifier())); // đúng field name
+            return ticket;
+        }).collect(Collectors.toList());
+
+        ticketRepository.saveAll(tickets);
+
+        return booking;
+    }
+
+    @Transactional
+    public void confirmPayment(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt vé"));
+
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new RuntimeException("Đơn đặt vé không ở trạng thái chờ thanh toán");
+        }
+
+        booking.setStatus(BookingStatus.CONFIRMED);
+        bookingRepository.save(booking);
     }
 }

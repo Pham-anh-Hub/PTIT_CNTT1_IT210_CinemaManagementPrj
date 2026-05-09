@@ -1,4 +1,5 @@
 package cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.service;
+import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.config.CustomUserDetails;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.dto.ProfileRequestDTO;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.dto.ProfileResponseDTO;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.model.User;
@@ -7,6 +8,7 @@ import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -128,5 +130,15 @@ public class ProfileServiceImpl implements IProfileService {
                 .avatar(p   != null ? p.getAvatar()   : null)
                 .address(p  != null ? p.getAddress()  : null)
                 .build();
+    }
+
+    public Long getCurrentUserId(Authentication authentication) {
+        CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
+        return principal.getUser().getUserId();
+    }
+
+    public User getCurrentUser(Authentication authentication) {
+        CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
+        return principal.getUser();
     }
 }

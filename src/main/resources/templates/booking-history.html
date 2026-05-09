@@ -22,9 +22,78 @@
         <div class="underline"></div>
     </div>
 
+    <!-- Filter Form -->
+    <form th:action="@{/user/booking-list}" method="get" class="mb-4"
+          style="background: #1a2236; border: 1px solid #2a3550; border-radius: 12px; padding: 18px 20px;">
+
+        <div class="row g-2 align-items-end"> <!-- Giảm g-3 xuống g-2 để tiết kiệm khoảng cách giữa các cột -->
+
+            <!-- Tên phim (Chiếm rộng nhất) -->
+            <div class="col-md-3">
+                <label class="mb-1" style="color:#7eb8f7; font-size:0.7rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase;">
+                    Tên phim
+                </label>
+                <input type="text" name="movieTitle"
+                       th:value="${filterMovie}"
+                       placeholder="Tìm tên phim..."
+                       style="background:#0f1724; border:1px solid #2a3550; border-radius:8px; color:#e0e6f0; font-size:0.85rem; padding:8px 12px; width:100%; outline:none;"
+                       onfocus="this.style.borderColor='#7eb8f7'" onblur="this.style.borderColor='#2a3550'">
+            </div>
+
+            <!-- Trạng thái -->
+            <div class="col-md-2">
+                <label class="mb-1" style="color:#7eb8f7; font-size:0.7rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase;">
+                    Trạng thái
+                </label>
+                <select name="status"
+                        style="background:#0f1724; border:1px solid #2a3550; border-radius:8px; color:#e0e6f0; font-size:0.85rem; padding:8px 12px; width:100%; outline:none;">
+                    <option value="">Tất cả</option>
+                    <option value="CONFIRMED" th:selected="${filterStatus == 'CONFIRMED'}">Thành công</option>
+                    <option value="PENDING"   th:selected="${filterStatus == 'PENDING'}">Chờ thanh toán</option>
+                    <option value="CANCELLED" th:selected="${filterStatus == 'CANCELLED'}">Đã hủy</option>
+                </select>
+            </div>
+
+            <!-- Từ ngày -->
+            <div class="col-md-2">
+                <label class="mb-1" style="color:#7eb8f7; font-size:0.7rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase;">
+                    Từ ngày
+                </label>
+                <input type="date" name="fromDate"
+                       th:value="${filterFrom}"
+                       style="background:#0f1724; border:1px solid #2a3550; border-radius:8px; color:#e0e6f0; font-size:0.85rem; padding:8px 12px; width:100%; outline:none; color-scheme: dark;">
+            </div>
+
+            <!-- Đến ngày -->
+            <div class="col-md-2">
+                <label class="mb-1" style="color:#7eb8f7; font-size:0.7rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase;">
+                    Đến ngày
+                </label>
+                <input type="date" name="toDate"
+                       th:value="${filterTo}"
+                       style="background:#0f1724; border:1px solid #2a3550; border-radius:8px; color:#e0e6f0; font-size:0.85rem; padding:8px 12px; width:100%; outline:none; color-scheme: dark;">
+            </div>
+
+            <!-- Buttons (Gộp col để không bị đẩy dòng) -->
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit"
+                        style="background:#f5c518; border:none; border-radius:8px; color:#111; font-weight:700; padding:8px 20px; cursor:pointer; flex-grow: 1; transition:0.2s; margin-right: 8px;">
+                    LỌC VÉ
+                </button>
+                <a th:href="@{/user/booking-list}"
+                   title="Xóa bộ lọc"
+                   style="background:#2a3550; border:none; border-radius:8px; color:#fff; width:40px; height:38px; text-decoration:none; display:flex; align-items:center; justify-content:center; transition:0.2s;"
+                   onmouseover="this.style.background='#3d4b6e'" onmouseout="this.style.background='#2a3550'">
+                    ✕
+                </a>
+            </div>
+
+        </div>
+    </form>
+
     <div class="history-card">
         <div class="table-responsive">
-            <table class="table table-dark table-hover mb-0">
+            <table class="table table-dark  mb-0">
                 <thead>
                 <tr>
                     <th scope="col" class="py-3 px-4">Ngày giao dịch</th>
@@ -32,26 +101,71 @@
                     <th scope="col" class="py-3">Loại giao dịch</th>
                     <th scope="col" class="py-3">Số vé</th>
                     <th scope="col" class="py-3 text-end px-4">Số tiền</th>
+                    <th scope="col" class="py-3 text-center px-4">Hành động</th> <!-- bổ sung -->
                 </tr>
                 </thead>
                 <tbody>
+                <!-- Duyệt danh sách bookings -->
                 <tr th:each="booking : ${bookings}" class="align-middle">
-                    <td class="px-4" th:text="${#temporals.format(booking.createdAt, 'dd/MM/yyyy HH:mm')}">12/04/2024</td>
+                    <!-- 1. Ngày giao dịch: Sử dụng bookedAt -->
+                    <td class="px-4" th:text="${#temporals.format(booking.bookedAt, 'dd/MM/yyyy HH:mm')}">12/04/2024 14:30</td>
+
                     <td>
-                        <div class="fw-bold text-info" th:text="${booking.showtime.movie.title}">Lật Mặt 7: Một Điều Ước</div>
-                        <small class="text-muted" th:text="${booking.showtime.room.roomName + ' - Ghế: ' + booking.seats}">Phòng 05 - Ghế: A12, A13</small>
+                        <!-- Lấy thông tin từ vé đầu tiên trong danh sách tickets -->
+                        <div th:if="${not #lists.isEmpty(booking.tickets)}">
+                            <!-- 2. Tên phim: Booking -> Ticket -> Showtime -> Movie -->
+                            <div class="fw-bold text-info"
+                                 th:text="${booking.tickets[0].showTime.movie.movieTitle}">Tên Phim</div>
+
+                            <!-- 3. Phòng và Danh sách ghế -->
+                            <small class="text-muted">
+                                <span th:text="${booking.tickets[0].showTime.room.roomName}">Phòng số</span>
+                                <span> - Ghế: </span>
+                                <!-- Duyệt danh sách vé để lấy tên ghế, nối nhau bằng dấu phẩy -->
+                                <span th:each="t, iterStat : ${booking.tickets}"
+                                      th:text="${t.seat.seatName} + ${!iterStat.last ? ', ' : ''}">A1</span>
+                            </small>
+                        </div>
                     </td>
-                    <td>Đặt vé trực tuyến</td>
-                    <td th:text="${booking.ticketCount}">2</td>
+
+                    <!-- 4. Loại giao dịch hoặc Trạng thái -->
+                    <td>
+                        <span th:if="${booking.status.name() == 'CONFIRMED'}" class="badge bg-success">Thành công</span>
+                        <span th:if="${booking.status.name() == 'PENDING'}" class="badge bg-warning text-dark">Chờ thanh toán</span>
+                        <span th:if="${booking.status.name() == 'CANCELLED'}" class="badge bg-danger">Đã hủy</span>
+                    </td>
+
+                    <!-- 5. Số vé: Kích thước của danh sách tickets -->
+                    <td th:text="${#lists.size(booking.tickets)}">0</td>
+
+                    <!-- 6. Số tiền: Sử dụng totalAmount -->
                     <td class="text-end px-4 fw-bold text-warning"
-                        th:text="${#numbers.formatDecimal(booking.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'}">
-                        160.000 đ
+                        th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT') + ' đ'}">
+                        0 đ
+                    </td>
+                    <!-- Xem chi tiết  th:href="@{/user/booking-detail/{id}(id=${booking.bookingId})}"-->
+                    <td class="text-center px-4">
+                        <div class="d-flex justify-content-center gap-2">
+                            <!-- Nút xem chi tiết luôn hiển thị -->
+                            <a  th:unless="${booking.status.name() == 'PENDING'}" th:href="@{/user/booking-detail/{id}(id=${booking.bookingId})}"
+                               class="btn btn-sm btn-outline-info">
+                                Chi tiết
+                            </a>
+
+                            <!-- Nếu đang chờ thanh toán, hiện thêm nút Thanh toán ngay -->
+                            <a th:if="${booking.status.name() == 'PENDING'}"
+                               th:href="@{/cinema/payment/{id}(id=${booking.bookingId})}"
+                               class="btn btn-sm btn-warning">
+                                Thanh toán ngay
+                            </a>
+                        </div>
                     </td>
                 </tr>
 
+                <!-- Hiển thị khi danh sách trống -->
                 <tr th:if="${#lists.isEmpty(bookings)}">
                     <td colspan="5" class="text-center py-5">
-                        <p class="text-muted mb-0">Không có dữ liệu</p>
+                        <p class="text-muted mb-0">Không có dữ liệu lịch sử đặt vé</p>
                     </td>
                 </tr>
                 </tbody>

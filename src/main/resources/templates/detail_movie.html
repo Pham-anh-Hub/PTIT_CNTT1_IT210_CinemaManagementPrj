@@ -78,7 +78,7 @@
                    th:href="@{/cinema/booking/select-seat(movieId=${movie.movieId}, showId=${selectedShow.showId}, toggleSeat=${seat.seatId})}"
                    class="seat text-center rounded text-decoration-none text-light"
                    style="padding: 5px; display: block; font-size: 12px;"
-                   th:classappend="${seat.isSelecting ? 'bg-primary' : (seat.seatLevel.name() == 'VIP' ? 'bg-warning' : 'bg-secondary')}">
+                   th:classappend="${seat.selecting ? 'bg-primary' : (seat.seatLevel != null && seat.seatLevel.name() == 'VIP' ? 'bg-warning' : 'bg-secondary')}">
                     [[${seat.seatName}]]
                 </a>
 

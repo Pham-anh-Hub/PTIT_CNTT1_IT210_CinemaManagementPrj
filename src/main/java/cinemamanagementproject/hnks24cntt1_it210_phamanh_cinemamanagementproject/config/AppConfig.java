@@ -28,13 +28,16 @@ public class AppConfig implements WebMvcConfigurer {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/home", "/cinema/movie/detail/**", "/auth/**").permitAll()
+                        // 1. Cho phép tài nguyên tĩnh (PHẢI LÊN ĐẦU)
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
 
-                        // QUAN TRỌNG: Mọi thao tác đặt vé và chọn ghế phải đăng nhập
-                        .requestMatchers("/cinema/booking/**").authenticated()
-                        .requestMatchers("/cinema/profile/**", "/cinema/orders/**").authenticated()
+                        // 2. Cho phép các trang công khai cụ thể
+                        .requestMatchers("/", "/home", "/auth/**", "/cinema/movie/detail/**").permitAll()
 
+                        // 3. Chặn các trang cụ thể yêu cầu đăng nhập
+                        .requestMatchers("/user/booking-list", "/cinema/booking/**", "/cinema/profile/**").authenticated()
+
+                        // 4. Các trang còn lại: Nếu muốn mở cửa thì để permitAll, muốn bảo mật thì authenticated
                         .anyRequest().authenticated()
                 )
                 .formLogin(login -> login

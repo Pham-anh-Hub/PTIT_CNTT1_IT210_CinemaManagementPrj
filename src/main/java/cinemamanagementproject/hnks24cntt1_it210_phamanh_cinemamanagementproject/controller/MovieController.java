@@ -29,7 +29,6 @@ public class MovieController {
     private final BookingService bookingService;
 
     // Khởi tạo session nếu chưa có
-    @ModelAttribute("selectedSeatIds")
     public List<Long> initSelectedSeats() {
         return new ArrayList<>();
     }
@@ -37,20 +36,19 @@ public class MovieController {
     @GetMapping("/detail/{id}")
     public String getMovieDetail(@PathVariable("id") Long id,
                                  @RequestParam(required = false) Long showId,
-                                 @RequestParam(required = false) Long toggleSeat,
                                  HttpSession session,
                                  Model model) {
 
         // 1. Lấy thông tin phim (vẫn để ở đây vì thuộc MovieController)
         model.addAttribute("movie", movieService.getMovieById(id));
 
-        // 2. Xử lý nghiệp vụ chọn ghế qua BookingService
-        List<Long> selectingIds = bookingService.handleSeatToggle(session, toggleSeat);
-
-        // 3. Nếu đã chọn suất chiếu, nhờ BookingService đổ dữ liệu vào Model
         if (showId != null) {
-            // QUAN TRỌNG: Lưu showId vào session để trang Confirm có thể lấy ra
             session.setAttribute("selectedShowId", showId);
+
+            // Đọc selectedSeatIds từ session để hiển thị, KHÔNG toggle
+            List<Long> selectingIds = (List<Long>) session.getAttribute("selectedSeatIds");
+            if (selectingIds == null) selectingIds = new ArrayList<>();
+
             bookingService.populateBookingModel(model, showId, selectingIds);
         }
 

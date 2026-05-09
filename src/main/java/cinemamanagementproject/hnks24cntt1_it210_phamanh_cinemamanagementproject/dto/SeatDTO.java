@@ -15,6 +15,6 @@ public class SeatDTO {
     private String seatName; // A1, A2...
     private SeatLevel seatLevel;
     private BigDecimal price;
-    private boolean isBooked;
-    private boolean isSelecting;
+    private boolean booked;
+    private boolean selecting;
 }

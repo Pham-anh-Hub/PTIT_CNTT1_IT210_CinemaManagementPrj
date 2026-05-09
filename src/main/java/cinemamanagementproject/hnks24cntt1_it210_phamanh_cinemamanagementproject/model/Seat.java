@@ -27,8 +27,10 @@ public class Seat {
     private Room room;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "seat_level")
     private SeatLevel seatLevel;
 
+    @Column(name = "seat_modifier")
     private BigDecimal seatModifier;
 
     @OneToMany(mappedBy = "seat")
