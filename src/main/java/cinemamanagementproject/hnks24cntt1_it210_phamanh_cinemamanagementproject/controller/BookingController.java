@@ -16,7 +16,6 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/cinema/booking")
-
 @RequiredArgsConstructor
 public class BookingController {
 
@@ -78,6 +77,23 @@ public class BookingController {
             // Ghế bị người khác đặt mất → quay lại báo lỗi
             redirectAttributes.addFlashAttribute("errorMsg", e.getMessage());
             return "redirect:/cinema/booking/confirm";
+        }
+    }
+
+    // Xử lý khi user bấm xác nhận thanh toán
+    @PostMapping("/{bookingId}/confirm")
+    public String confirmPayment(
+            @PathVariable Long bookingId,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            bookingService.confirmPayment(bookingId);
+            redirectAttributes.addFlashAttribute("successMsg", "Đặt vé thành công!");
+            return "redirect:/user/booking-list";
+
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMsg", e.getMessage());
+            return "redirect:/cinema/payment/" + bookingId;
         }
     }
 }

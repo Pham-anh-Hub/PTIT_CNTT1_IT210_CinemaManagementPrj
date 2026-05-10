@@ -69,10 +69,11 @@ public class ProfileController {
         refreshSecurityContext(userId);
 
         redirectAttributes.addFlashAttribute("successMsg", "Cập nhật hồ sơ thành công!");
-        if (profileService.getProfile(userId).getRole().equals(Role.ADMIN)){
+        var authorities = authentication.getAuthorities();
+        if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
             return "redirect:/admin/dashboard";
-        } else if (profileService.getProfile(userId).getRole().equals(Role.STAFF)) {
-            return "redirect:/staff/home";
+        } else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_STAFF"))) {
+            return "redirect:/staff/bookings";
         }
         return "redirect:/home";
     }

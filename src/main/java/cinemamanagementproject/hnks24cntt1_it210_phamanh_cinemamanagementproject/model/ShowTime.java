@@ -1,4 +1,5 @@
 package cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.model;
+import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.enums.ShowStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,6 +30,10 @@ public class ShowTime {
     private LocalDateTime startAt;
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private ShowStatus status = ShowStatus.ACTIVE;
 
     @Column(name = "base_price")
     private BigDecimal basePrice;

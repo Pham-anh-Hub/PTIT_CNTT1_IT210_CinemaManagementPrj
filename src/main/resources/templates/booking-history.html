@@ -22,6 +22,17 @@
         <div class="underline"></div>
     </div>
 
+    <!--  Khối thông báo  -->
+    <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show mb-3">
+        <span th:text="${successMsg}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show mb-3">
+        <span th:text="${errorMsg}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
     <!-- Filter Form -->
     <form th:action="@{/user/booking-list}" method="get" class="mb-4"
           style="background: #1a2236; border: 1px solid #2a3550; border-radius: 12px; padding: 18px 20px;">
@@ -49,7 +60,7 @@
                         style="background:#0f1724; border:1px solid #2a3550; border-radius:8px; color:#e0e6f0; font-size:0.85rem; padding:8px 12px; width:100%; outline:none;">
                     <option value="">Tất cả</option>
                     <option value="CONFIRMED" th:selected="${filterStatus == 'CONFIRMED'}">Thành công</option>
-                    <option value="PENDING"   th:selected="${filterStatus == 'PENDING'}">Chờ thanh toán</option>
+                    <option value="PENDING" th:selected="${filterStatus == 'PENDING'}">Chờ xác nhận</option>
                     <option value="CANCELLED" th:selected="${filterStatus == 'CANCELLED'}">Đã hủy</option>
                 </select>
             </div>
@@ -101,7 +112,7 @@
                     <th scope="col" class="py-3">Loại giao dịch</th>
                     <th scope="col" class="py-3">Số vé</th>
                     <th scope="col" class="py-3 text-end px-4">Số tiền</th>
-                    <th scope="col" class="py-3 text-center px-4">Hành động</th> <!-- bổ sung -->
+                    <th scope="col" class="py-3 text-center px-4">Hành động</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -130,8 +141,10 @@
 
                     <!-- 4. Loại giao dịch hoặc Trạng thái -->
                     <td>
-                        <span th:if="${booking.status.name() == 'CONFIRMED'}" class="badge bg-success">Thành công</span>
-                        <span th:if="${booking.status.name() == 'PENDING'}" class="badge bg-warning text-dark">Chờ thanh toán</span>
+                        <span th:if="${booking.status.name() == 'CONFIRMED'}" class="badge bg-success">Đã xác nhận</span>
+                        <span th:if="${booking.status.name() == 'PENDING'}" class="badge bg-secondary">Chưa thanh toán</span>
+                        <span th:if="${booking.status.name() == 'PAID'}" class="badge bg-info text-dark">Chờ xác nhận</span>
+                        <span th:if="${booking.status.name() == 'CANCELLED_PENDING'}" class="badge bg-dark">Chờ hoàn tiền</span>
                         <span th:if="${booking.status.name() == 'CANCELLED'}" class="badge bg-danger">Đã hủy</span>
                     </td>
 
@@ -146,18 +159,31 @@
                     <!-- Xem chi tiết  th:href="@{/user/booking-detail/{id}(id=${booking.bookingId})}"-->
                     <td class="text-center px-4">
                         <div class="d-flex justify-content-center gap-2">
-                            <!-- Nút xem chi tiết luôn hiển thị -->
-                            <a  th:unless="${booking.status.name() == 'PENDING'}" th:href="@{/user/booking-detail/{id}(id=${booking.bookingId})}"
+
+                            <!-- CONFIRMED / CANCELLED → xem chi tiết -->
+                            <a th:if="${booking.status.name() != 'PENDING'}"
+                               th:href="@{/user/booking-detail/{id}(id=${booking.bookingId})}"
                                class="btn btn-sm btn-outline-info">
                                 Chi tiết
                             </a>
 
-                            <!-- Nếu đang chờ thanh toán, hiện thêm nút Thanh toán ngay -->
+                            <!-- PENDING → xem lại hướng dẫn thanh toán, chờ staff xác nhận -->
                             <a th:if="${booking.status.name() == 'PENDING'}"
                                th:href="@{/cinema/payment/{id}(id=${booking.bookingId})}"
-                               class="btn btn-sm btn-warning">
-                                Thanh toán ngay
+                               class="btn btn-sm btn-outline-warning">
+                                Xem hướng dẫn
                             </a>
+
+                            <!-- Thêm nút hủy cho PENDING -->
+                            <form th:if="${booking.status.name() == 'PENDING'}"
+                                  th:action="@{/user/booking/{id}/cancel(id=${booking.bookingId})}"
+                                  method="post" style="margin:0;"
+                                  onsubmit="return confirm('Hủy đơn vé này?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger ml-2"    >
+                                    Hủy
+                                </button>
+                            </form>
+
                         </div>
                     </td>
                 </tr>

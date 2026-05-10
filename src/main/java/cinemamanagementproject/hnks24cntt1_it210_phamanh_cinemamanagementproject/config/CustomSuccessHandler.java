@@ -27,7 +27,7 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
                 redirectUrl = "/admin/dashboard";
                 break;
             } else if (auth.getAuthority().equals("ROLE_STAFF")) {
-                redirectUrl = "/staff/home";
+                redirectUrl = "/staff/bookings";
                 break;
             }
         }

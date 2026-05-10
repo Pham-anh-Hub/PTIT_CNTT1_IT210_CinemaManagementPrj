@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,4 +56,35 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                 WHERE b.bookingId = :id
             """)
     Optional<Booking> findByIdWithTickets(@Param("id") Long id);
+
+    @Query("""
+    SELECT DISTINCT b FROM Booking b
+    JOIN FETCH b.tickets t
+    JOIN FETCH t.showTime
+    WHERE b.status = :status
+""")
+    List<Booking> findPendingWithShowTime(@Param("status") BookingStatus status);
+
+    long countBookingByStatus(BookingStatus status);
+
+    @Query("""
+    SELECT DISTINCT b FROM Booking b
+    JOIN FETCH b.tickets t
+    JOIN FETCH t.showTime st
+    JOIN FETCH st.movie
+    JOIN FETCH st.room
+    JOIN FETCH t.seat
+    JOIN FETCH b.user u
+    WHERE b.status = 'PAID'
+    AND (
+        CAST(b.bookingId AS string) LIKE %:keyword%
+        OR LOWER(u.profile.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    )
+    ORDER BY b.bookedAt DESC
+""")
+    List<Booking> searchPaidBookings(@Param("keyword") String keyword);
+
+    long countByStatus(BookingStatus status);
+
+    List<Booking> findByStatusInOrderByBookedAtDesc(Collection<BookingStatus> statuses);
 }

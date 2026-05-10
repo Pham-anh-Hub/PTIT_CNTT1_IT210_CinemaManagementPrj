@@ -2,9 +2,12 @@ package cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementprojec
 
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.dto.SeatDTO;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.dto.ShowTimeDTO;
+import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.enums.BookingStatus;
+import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.enums.ShowStatus;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.model.*;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,11 +22,11 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ShowTimeService {
-     private final ShowTimeRepository showTimeRepository;
-     private final IMovieRepository movieRepository;
-     private final RoomRepository roomRepository;
-     private final TicketRepository ticketRepository;
-     private final SeatRepository seatRepository;
+    private final ShowTimeRepository showTimeRepository;
+    private final IMovieRepository movieRepository;
+    private final RoomRepository roomRepository;
+    private final TicketRepository ticketRepository;
+    private final SeatRepository seatRepository;
 
     public ShowTime findById(Long id) {
         return showTimeRepository.findById(id)
@@ -31,33 +34,41 @@ public class ShowTimeService {
     }
 
 
-    public List<ShowTime> searchShowTimes(String keyword, Long roomId, String status) {
+    public List<ShowTimeDTO> searchShowTimes(String keyword, Long roomId, String status) {
         LocalDateTime now = LocalDateTime.now();
 
-        // Lấy tất cả kèm movie/room để tránh lỗi N+1 khi filter và render
         return showTimeRepository.findAllWithDetails().stream()
                 .filter(s -> {
-                    // Lọc theo từ khóa (Tên phim)
                     boolean matchKeyword = (keyword == null || keyword.isEmpty()) ||
                             s.getMovie().getMovieTitle().toLowerCase().contains(keyword.toLowerCase());
 
-                    // Lọc theo phòng chiếu
                     boolean matchRoom = (roomId == null) ||
                             s.getRoom().getRoomId().equals(roomId);
 
-                    // Lọc theo trạng thái (Sử dụng logic thời gian)
-                    boolean matchStatus = true;
-                    if ("SHOWING".equalsIgnoreCase(status)) {
-                        matchStatus = now.isAfter(s.getStartAt()) && now.isBefore(s.getEndedAt());
-                    } else if ("UPCOMING".equalsIgnoreCase(status)) {
-                        matchStatus = now.isBefore(s.getStartAt());
-                    } else if ("ENDED".equalsIgnoreCase(status)) {
-                        matchStatus = now.isAfter(s.getEndedAt());
-                    }
+                    // Tính status động theo giờ
+                    String computed = computeStatus(s, now);
+                    boolean matchStatus = (status == null || status.isEmpty()) ||
+                            computed.equalsIgnoreCase(status); // "NOW_SHOWING" khớp luôn
 
                     return matchKeyword && matchRoom && matchStatus;
                 })
+                .map(s -> ShowTimeDTO.builder()
+                        .showId(s.getShowId())
+                        .movieTitle(s.getMovie().getMovieTitle())
+                        .roomName(s.getRoom().getRoomName())
+                        .startAt(s.getStartAt())
+                        .endedAt(s.getEndedAt())
+                        .basePrice(s.getBasePrice())
+                        .status(computeStatus(s, now))
+                        .build())
                 .collect(Collectors.toList());
+    }
+
+    // Helper tính trạng thái theo thời gian thực
+    private String computeStatus(ShowTime s, LocalDateTime now) {
+        if (now.isBefore(s.getStartAt())) return "UPCOMING";
+        if (now.isAfter(s.getEndedAt())) return "ENDED";
+        return "NOW_SHOWING";
     }
 
     // Các phương thức đếm số lượng cho Dashboard
@@ -93,7 +104,7 @@ public class ShowTimeService {
         );
 
         if (!conflicts.isEmpty()) {
-            ShowTime firstConflict = conflicts.get(0);
+            ShowTime firstConflict = conflicts.getFirst();
             throw new RuntimeException("Xung đột lịch chiếu! Phòng này đã có phim '"
                     + firstConflict.getMovie().getMovieTitle()
                     + "' chiếu đến " + firstConflict.getEndedAt().format(DateTimeFormatter.ofPattern("HH:mm")));
@@ -178,28 +189,40 @@ public class ShowTimeService {
         ShowTime showTime = showTimeRepository.findById(showId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy suất chiếu"));
 
-        Room room = showTime.getRoom();
+        List<Seat> seatsInDb = seatRepository.findByRoom_RoomId(showTime.getRoom().getRoomId());
 
-        // 1. Lấy tất cả ghế đang có trong DB (Dù là 15 hay 40)
-        List<Seat> seatsInDb = seatRepository.findByRoom_RoomId(room.getRoomId());
+        //  Chỉ lấy ticket của đơn PENDING và CONFIRMED
+        Set<Long> bookedSeatIds = ticketRepository
+                .findActiveByShowId(showId, List.of(BookingStatus.PENDING, BookingStatus.CONFIRMED))
+                .stream()
+                .map(t -> t.getSeat().getSeatId())
+                .collect(Collectors.toSet());
 
-        // 2. Bỏ qua việc kiểm tra khớp số lượng.
-        // Hệ thống sẽ chỉ hiện bấy nhiêu ghế có trong danh sách seatsInDb.
-
-        // 3. Logic lấy vé đã đặt
-        Set<Long> bookedSeatIds = ticketRepository.findByShowTime_ShowId(showId)
-                .stream().map(t -> t.getSeat().getSeatId()).collect(Collectors.toSet());
-
-        // 4. Map ra DTO
         return seatsInDb.stream().map(seat -> {
             boolean isBooked = bookedSeatIds.contains(seat.getSeatId());
             boolean isSelecting = selectingIds != null && selectingIds.contains(seat.getSeatId());
 
-            BigDecimal price = showTime.getBasePrice().add(
-                    seat.getSeatModifier() != null ? seat.getSeatModifier() : BigDecimal.ZERO
-            );
+            //  Dùng NHÂN cho nhất quán với createPendingBooking
+            BigDecimal modifier = seat.getSeatModifier() != null
+                    ? seat.getSeatModifier() : BigDecimal.ONE;
+            BigDecimal price = showTime.getBasePrice().multiply(modifier);
 
             return new SeatDTO(seat.getSeatId(), seat.getSeatName(),
                     seat.getSeatLevel(), price, isBooked, isSelecting);
+
         }).collect(Collectors.toList());
-    }}
+    }
+
+    // Chayj mỗi 5p - tự động set trạng thái suất chiếu
+    // thành ngừng chiếu nếu giờ end_at < now
+    @Scheduled(fixedDelay = 300_000)
+    @Transactional
+    public void autoEndShowTime(){
+        LocalDateTime now = LocalDateTime.now();
+
+        // Lấy tất cả suất chiếu
+        showTimeRepository.updateShowtimeStatus(now, ShowStatus.FINISHED);
+    }
+
+
+}

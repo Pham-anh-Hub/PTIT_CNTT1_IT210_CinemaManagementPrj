@@ -114,7 +114,7 @@
             </div>
         </a>
 
-        <form id="logoutForm" th:action="@{/logout}" method="post" style="display: none;"></form>
+        <form id="logoutForm" th:action="@{/auth/logout}" method="post" style="display: none;"></form>
 
         <a th:href="@{/auth/logout}" class="sidebar-link" style="color: #ff7675 !important;"
            onclick="if(confirm('Bạn có chắc chắn muốn đăng xuất?')) document.getElementById('logoutForm').submit(); return false;">

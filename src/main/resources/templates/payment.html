@@ -264,14 +264,27 @@
         </label>
     </div>
 
-    <!-- Nút xác nhận -->
-    <form th:action="@{/cinema/payment/{id}/confirm(id=${booking.bookingId})}" method="POST">
-        <button type="submit" class="btn-pay">
-            Xác nhận thanh toán
+    <!-- Hướng dẫn thanh toán -->
+    <div class="method-card mt-3">
+        <div class="section-label">📋 Hướng dẫn</div>
+        <p style="color:#ccc; font-size:0.9rem; line-height:1.7">
+            Đơn đặt vé <strong style="color:#ff9800">#<span th:text="${booking.bookingId}"></span></strong>
+            đã được ghi nhận.<br>
+            Vui lòng hoàn tất thanh toán theo phương thức đã chọn,
+            nhân viên sẽ xác nhận đơn trên hệ thống trong thời gian sớm nhất.<br>
+            <span style="color:#888; font-size:0.82rem;">
+            ⏳ Đơn sẽ tự động hủy nếu không được xác nhận trong vòng 15 phút.
+        </span>
+        </p>
+    </div>
+
+    <!-- Nút hoàn tất, chuyển trạng thái đơn hàng về đã thanh toán rồi chờ xác nhận-->
+    <form th:action="@{/cinema/booking/{id}/confirm(id=${booking.bookingId})}" method="post">
+        <button type="submit" class="btn-pay mt-3"
+                style="display:block; width:100%; text-align:center; border:none; cursor:pointer;">
+            Hoàn tất đặt vé
         </button>
     </form>
-
-    <a th:href="@{/user/booking-list}" class="btn-back-link">← Quay lại lịch sử đặt vé</a>
 
 </div>
 

@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDateTime;
+
 @Controller
 @RequestMapping("/cinema/payment")
 @RequiredArgsConstructor
@@ -27,11 +29,34 @@ public class PaymentController {
             @PathVariable Long bookingId,
             Model model
     ) {
+        /**
+         * Kiểm tra đơn đặt theo PathVariable
+         * */
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt vé"));
 
-        // Bảo vệ: chỉ cho xem nếu còn PENDING
+        /**
+         * chỉ cho xem nếu còn PENDING
+         * */
         if (booking.getStatus() != BookingStatus.PENDING) {
+            return "redirect:/user/booking-list";
+        }
+
+        if (booking.getTickets() == null || booking.getTickets().isEmpty()) {
+            // Booking không có ticket — data lỗi, hủy luôn
+            booking.setStatus(BookingStatus.CANCELLED);
+            bookingRepository.save(booking);
+            return "redirect:/user/booking-list";
+        }
+
+        /**
+         * Kiểm tra suất chiếu đã qua hay chưa
+         * */
+        LocalDateTime showStart = booking.getTickets().getFirst().getShowTime().getStartAt();
+        if (LocalDateTime.now().isAfter(showStart)) {
+            // Tự động hủy đơn
+            booking.setStatus(BookingStatus.CANCELLED);
+            bookingRepository.save(booking);
             return "redirect:/user/booking-list";
         }
 
@@ -39,20 +64,7 @@ public class PaymentController {
         return "payment"; // tên file html của bạn
     }
 
-    // Xử lý khi user bấm xác nhận thanh toán
-    @PostMapping("/{bookingId}/confirm")
-    public String confirmPayment(
-            @PathVariable Long bookingId,
-            RedirectAttributes redirectAttributes
-    ) {
-        try {
-            bookingService.confirmPayment(bookingId);
-            redirectAttributes.addFlashAttribute("successMsg", "Đặt vé thành công!");
-            return "redirect:/user/booking-detail/" + bookingId;
+    // Xử lý khi user bấm xác nhận thanh toán chuyển đến cho staff xác nhận
 
-        } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("errorMsg", e.getMessage());
-            return "redirect:/cinema/payment/" + bookingId;
-        }
-    }
+
 }

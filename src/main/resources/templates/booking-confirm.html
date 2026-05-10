@@ -104,6 +104,16 @@
                 </div>
             </div>
         </div>
+
+        <!-- Thông báo ghế bị đặt mất -->
+        <div th:if="${errorMsg}"
+             style="background:#3a1a1a; border:1px solid #c0392b; border-radius:8px;
+            color:#f08080; padding:14px 18px; margin-bottom:20px; font-size:0.9rem;">
+            ⚠ <span th:text="${errorMsg}"></span>
+            <div style="margin-top:8px; font-size:0.82rem; color:#aaa;">
+                Vui lòng quay lại và chọn ghế khác.
+            </div>
+        </div>
     </div>
 </div>
 

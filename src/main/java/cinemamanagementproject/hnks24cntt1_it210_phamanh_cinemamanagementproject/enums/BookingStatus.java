@@ -3,6 +3,7 @@ package cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementprojec
 public enum BookingStatus {
     CONFIRMED,
     PENDING,
-    CANCELLED
-
+    CANCELLED,
+    PAID,
+    CANCELLED_PENDING
 }

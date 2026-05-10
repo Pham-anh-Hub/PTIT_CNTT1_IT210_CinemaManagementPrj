@@ -45,7 +45,7 @@ public class AdminMovieController {
         model.addAttribute("nowShowing", movieService.countByStatus(MovieStatus.NOW_SHOWING));
         model.addAttribute("upcoming", movieService.countByStatus(MovieStatus.UPCOMING));
 
-        return "admin-movie-list";
+        return "admin/admin-movie-list";
     }
 
     /** Form thêm mới */

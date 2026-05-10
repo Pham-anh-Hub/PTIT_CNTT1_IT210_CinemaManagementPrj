@@ -379,181 +379,181 @@
 <div th:replace="~{layouts/admin-sidebar :: sidebar}"></div>
 
 
-<!-- ─── MAIN ─── -->
-<main class="main">
+    <!-- ─── MAIN ─── -->
+    <main class="main">
 
-    <!-- Header -->
-    <div class="page-header">
-        <div class="page-title">
-            <div class="title-line"></div>
-            <h1>Quản lý Suất chiếu</h1>
-        </div>
-        <a th:href="@{/admin/showtimes/create}" href="/admin/showtimes/create" class="btn-add">
-            + Thêm suất chiếu mới
-        </a>
-    </div>
-
-    <!-- Stats -->
-    <div class="stats-row">
-        <div class="stat-card total">
-            <div class="stat-num" th:text="${showTimes.size()}">12</div>
-            <div class="stat-label">Tổng số suất chiếu</div>
-        </div>
-        <div class="stat-card showing">
-            <div class="stat-num" th:text="${showingCount.size()}">4</div>
-            <div class="stat-label">Đang chiếu</div>
-        </div>
-        <div class="stat-card upcoming">
-            <div class="stat-num" th:text="${upcomingCount.size()}">5</div>
-            <div class="stat-label">Sắp chiếu</div>
-        </div>
-    </div>
-
-    <!-- Alerts -->
-    <div class="alert alert-success" th:if="${success}">
-        ✓ <span th:text="${success}"></span>
-    </div>
-    <div class="alert alert-error" th:if="${error}">
-        ✕ <span th:text="${error}"></span>
-    </div>
-
-    <!-- Filter bar -->
-    <form th:action="@{/admin/showtimes}" method="get" class="filter-bar">
-        <div class="filter-group" style="flex:2">
-            <label class="filter-label">Tìm kiếm</label>
-            <input type="text" name="keyword" class="filter-input"
-                   placeholder="Tên phim..."
-                   th:value="${keyword}">
-        </div>
-
-        <div class="filter-group">
-            <label class="filter-label">Phòng chiếu</label>
-            <select name="roomId" class="filter-select">
-                <option value="">-- Tất cả --</option>
-                <option th:each="r : ${rooms}"
-                        th:value="${r.roomId}"
-                        th:text="${r.roomName}"
-                        th:selected="${r.roomId == selectedRoomId}">
-                </option>
-            </select>
-        </div>
-
-        <div class="filter-group">
-            <label class="filter-label">Trạng thái</label>
-            <select name="status" class="filter-select">
-                <option value="">-- Tất cả --</option>
-                <option value="UPCOMING" th:selected="${status == 'UPCOMING'}">Sắp chiếu</option>
-                <option value="NOW_SHOWING" th:selected="${status == 'NOW_SHOWING'}">Đang chiếu</option>
-                <option value="ENDED" th:selected="${status == 'ENDED'}">Đã kết thúc</option>
-            </select>
-        </div>
-
-        <div style="display: flex; gap: 8px; align-items: flex-end;">
-            <button type="submit" class="btn-add" style="background: #6c5ce7; border: none; padding: 0.75rem 1.5rem;">
-                Tìm kiếm
-            </button>
-            <a th:href="@{/admin/showtimes}" class="btn-reset"
-               style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
-                Reset
+        <!-- Header -->
+        <div class="page-header">
+            <div class="page-title">
+                <div class="title-line"></div>
+                <h1>Quản lý Suất chiếu</h1>
+            </div>
+            <a th:href="@{/admin/showtimes/create}" href="/admin/showtimes/create" class="btn-add">
+                + Thêm suất chiếu mới
             </a>
         </div>
-    </form>
 
-    <!-- Table -->
-    <div class="table-wrap">
-        <table id="mainTable">
-            <thead>
-            <tr>
-                <th>#</th>
-                <th>TÊN PHIM</th>
-                <th>PHÒNG</th>
-                <th>BẮT ĐẦU</th>
-                <th>KẾT THÚC</th>
-                <th>GIÁ VÉ</th>
-                <th>TRẠNG THÁI</th>
-                <th>THAO TÁC</th>
-            </tr>
-            </thead>
-            <tbody>
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card total">
+                <div class="stat-num" th:text="${showTimes.size()}">12</div>
+                <div class="stat-label">Tổng số suất chiếu</div>
+            </div>
+            <div class="stat-card showing">
+                <div class="stat-num" th:text="${showingCount}">4</div>
+                <div class="stat-label">Đang chiếu</div>
+            </div>
+            <div class="stat-card upcoming">
+                <div class="stat-num" th:text="${upcomingCount}">5</div>
+                <div class="stat-label">Sắp chiếu</div>
+            </div>
+        </div>
 
-            <!-- Thymeleaf loop -->
-            <tr th:each="s, i : ${showTimes}"
-                th:style="${i.index % 2 == 1} ? 'background: rgba(255,255,255,0.01)' : ''">
-                <td class="td-num" th:text="${i.count}">1</td>
+        <!-- Alerts -->
+        <div class="alert alert-success" th:if="${success}">
+            ✓ <span th:text="${success}"></span>
+        </div>
+        <div class="alert alert-error" th:if="${error}">
+            ✕ <span th:text="${error}"></span>
+        </div>
 
-                <td>
-                    <div class="movie-cell">
-                        <span class="movie-name" th:text="${s.movieTitle}">Avengers Endgame</span>
-                        <span class="movie-meta" th:text="'Kết thúc lúc ' + ${#temporals.format(s.endedAt, 'HH:mm')}">
-                Kết thúc lúc 21:30
-              </span>
-                    </div>
-                </td>
+        <!-- Filter bar -->
+        <form th:action="@{/admin/showtimes}" method="get" class="filter-bar">
+            <div class="filter-group" style="flex:2">
+                <label class="filter-label">Tìm kiếm</label>
+                <input type="text" name="keyword" class="filter-input"
+                       placeholder="Tên phim..."
+                       th:value="${keyword}">
+            </div>
 
-                <td>
-                    <span class="room-tag" th:text="${s.roomName}">Phòng 1</span>
-                </td>
+            <div class="filter-group">
+                <label class="filter-label">Phòng chiếu</label>
+                <select name="roomId" class="filter-select">
+                    <option value="">-- Tất cả --</option>
+                    <option th:each="r : ${rooms}"
+                            th:value="${r.roomId}"
+                            th:text="${r.roomName}"
+                            th:selected="${r.roomId == selectedRoomId}">
+                    </option>
+                </select>
+            </div>
 
-                <td>
-                    <div class="time-block">
-                        <span class="time-main" th:text="${#temporals.format(s.startAt, 'HH:mm')}">19:00</span>
-                        <span class="time-date" th:text="${#temporals.format(s.startAt, 'dd/MM/yyyy')}">26/04/2025</span>
-                    </div>
-                </td>
+            <div class="filter-group">
+                <label class="filter-label">Trạng thái</label>
+                <select name="status" class="filter-select">
+                    <option value="">-- Tất cả --</option>
+                    <option value="UPCOMING" th:selected="${status == 'UPCOMING'}">Sắp chiếu</option>
+                    <option value="NOW_SHOWING" th:selected="${status == 'NOW_SHOWING'}">Đang chiếu</option>
+                    <option value="ENDED" th:selected="${status == 'ENDED'}">Đã kết thúc</option>
+                </select>
+            </div>
 
-                <td>
-                    <div class="time-block">
-                        <span class="time-main" th:text="${#temporals.format(s.endedAt, 'HH:mm')}">21:45</span>
-                        <span class="time-date" th:text="${#temporals.format(s.endedAt, 'dd/MM/yyyy')}">26/04/2025</span>
-                    </div>
-                </td>
+            <div style="display: flex; gap: 8px; align-items: flex-end;">
+                <button type="submit" class="btn-add" style="background: #6c5ce7; border: none; padding: 0.75rem 1.5rem;">
+                    Tìm kiếm
+                </button>
+                <a th:href="@{/admin/showtimes}" class="btn-reset"
+                   style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                    Reset
+                </a>
+            </div>
+        </form>
 
-                <td>
-            <span class="price"
-                  th:text="${#numbers.formatDecimal(s.basePrice, 0, 'COMMA', 0, 'POINT') + ' đ'}">
-              85,000 đ
-            </span>
-                </td>
+        <!-- Table -->
+        <div class="table-wrap">
+            <table id="mainTable">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>TÊN PHIM</th>
+                    <th>PHÒNG</th>
+                    <th>BẮT ĐẦU</th>
+                    <th>KẾT THÚC</th>
+                    <th>GIÁ VÉ</th>
+                    <th>TRẠNG THÁI</th>
+                    <th>THAO TÁC</th>
+                </tr>
+                </thead>
+                <tbody>
 
-                <td>
-            <span th:class="|status status-${#strings.toLowerCase(s.status)}|">
-                <span th:switch="${s.status}">
-                    <span th:case="'UPCOMING'">Sắp chiếu</span>
-                    <span th:case="'NOW_SHOWING'">Đang chiếu</span>
-                    <span th:case="'ENDED'">Đã kết thúc</span>
+                <!-- Thymeleaf loop -->
+                <tr th:each="s, i : ${showTimes}"
+                    th:style="${i.index % 2 == 1} ? 'background: rgba(255,255,255,0.01)' : ''">
+                    <td class="td-num" th:text="${i.count}">1</td>
+
+                    <td>
+                        <div class="movie-cell">
+                            <span class="movie-name" th:text="${s.movieTitle}">Avengers Endgame</span>
+                            <span class="movie-meta" th:text="'Kết thúc lúc ' + ${#temporals.format(s.endedAt, 'HH:mm')}">
+                    Kết thúc lúc 21:30
+                  </span>
+                        </div>
+                    </td>
+
+                    <td>
+                        <span class="room-tag" th:text="${s.roomName}">Phòng 1</span>
+                    </td>
+
+                    <td>
+                        <div class="time-block">
+                            <span class="time-main" th:text="${#temporals.format(s.startAt, 'HH:mm')}">19:00</span>
+                            <span class="time-date" th:text="${#temporals.format(s.startAt, 'dd/MM/yyyy')}">26/04/2025</span>
+                        </div>
+                    </td>
+
+                    <td>
+                        <div class="time-block">
+                            <span class="time-main" th:text="${#temporals.format(s.endedAt, 'HH:mm')}">21:45</span>
+                            <span class="time-date" th:text="${#temporals.format(s.endedAt, 'dd/MM/yyyy')}">26/04/2025</span>
+                        </div>
+                    </td>
+
+                    <td>
+                <span class="price"
+                      th:text="${#numbers.formatDecimal(s.basePrice, 0, 'COMMA', 0, 'POINT') + ' đ'}">
+                  85,000 đ
                 </span>
-            </span>
-                </td>
+                    </td>
 
-                <td>
-                    <div class="actions">
-                        <a th:href="@{/admin/showtimes/edit/{id}(id=${s.showId})}"
-                            class="btn-edit">✏ Sửa</a>
-                        <form th:action="@{/admin/showtimes/delete/{id}(id=${s.showId})}"
-                              method="post" style="display:inline"
-                              onsubmit="return confirm('Xóa suất chiếu này?')">
-                            <button type="submit" class="btn-del">🗑 Xóa</button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
+                    <td>
+                <span th:class="|status status-${#strings.toLowerCase(s.status)}|">
+                    <span th:switch="${s.status}">
+                        <span th:case="'UPCOMING'">Sắp chiếu</span>
+                        <span th:case="'NOW_SHOWING'">Đang chiếu</span>
+                        <span th:case="'ENDED'">Đã kết thúc</span>
+                    </span>
+                </span>
+                    </td>
 
-            <!-- Static demo rows (xóa khi dùng Thymeleaf thật) -->
+                    <td>
+                        <div class="actions">
+                            <a th:href="@{/admin/showtimes/edit/{id}(id=${s.showId})}"
+                                class="btn-edit">✏ Sửa</a>
+                            <form th:action="@{/admin/showtimes/delete/{id}(id=${s.showId})}"
+                                  method="post" style="display:inline"
+                                  onsubmit="return confirm('Xóa suất chiếu này?')">
+                                <button type="submit" class="btn-del">🗑 Xóa</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
 
-            <!-- Empty state (Thymeleaf) -->
-            <tr th:if="${#lists.isEmpty(showTimes)}" class="demo-row" style="display:none">
-                <td colspan="8">
-                    <div class="empty-state">
-                        <div class="empty-icon">🎬</div>
-                        <div>Chưa có suất chiếu nào</div>
-                    </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+                <!-- Static demo rows (xóa khi dùng Thymeleaf thật) -->
 
-</main>
+                <!-- Empty state (Thymeleaf) -->
+                <tr th:if="${#lists.isEmpty(showTimes)}" class="demo-row" >
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <div class="empty-icon">🎬</div>
+                            <div>Chưa có suất chiếu nào</div>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </main>
 
 <script>
     function filterTable() {

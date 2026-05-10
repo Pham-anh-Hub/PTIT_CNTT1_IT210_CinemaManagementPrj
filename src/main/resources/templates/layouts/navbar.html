@@ -32,13 +32,19 @@
     <!-- MENU -->
     <ul class="nav-menu">
         <!-- Dùng so sánh == an toàn hơn .equals() -->
-        <li th:classappend="${activePage == 'home'} ? 'active' : ''">
-            <a th:href="@{/home}">Trang chủ</a>
+        <li class="nav-item">
+            <a class="nav-link"
+               th:href="${#authorization.expression('hasRole(''STAFF'')')} ? @{/staff/bookings} : @{/home}">
+                Trang chủ
+            </a>
         </li>
 
-        <!-- Không dùng #request. Dùng biến activePage để check active cho đồng bộ -->
-        <li th:classappend="${activePage == 'booking-list'} ? 'active' : ''">
-            <a th:href="@{/user/booking-list}">Lịch sử đặt vé</a>
+        <li class="nav-item" th:if="${#authorization.expression('hasRole(''CUSTOMER'')')}">
+            <a class="nav-link" th:href="@{/user/booking-list}">Lịch sử đặt vé</a>
+        </li>
+
+        <li class="nav-item" th:if="${#authorization.expression('hasRole(''STAFF'')')}">
+            <a class="nav-link" th:href="@{/staff/bookings}">Duyệt vé</a>
         </li>
     </ul>
 

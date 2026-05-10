@@ -28,8 +28,15 @@ public class AppConfig implements WebMvcConfigurer {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Cho phép tài nguyên tĩnh (PHẢI LÊN ĐẦU)
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                        // 1. Cho phép tài nguyên tĩnh + Public (PHẢI LÊN ĐẦU)
+                        .requestMatchers("/",
+                                "/home",
+                                "/auth/**",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/webjars/**",
+                                "/cinema/movie/detail/**").permitAll()
 
                         // 2. Cho phép các trang công khai cụ thể
                         .requestMatchers("/", "/home", "/auth/**", "/cinema/movie/detail/**").permitAll()
@@ -41,16 +48,11 @@ public class AppConfig implements WebMvcConfigurer {
                         .anyRequest().authenticated()
                 )
                 .formLogin(login -> login
-                        .loginPage("/auth/login") // Trang hiện form
-                        .loginProcessingUrl("/cinema/auth/login") // Link submit form
+                        .loginPage("/auth/login")
+                        .loginProcessingUrl("/cinema/auth/login")
                         .usernameParameter("email")
                         .passwordParameter("password")
-
-                        // Sử dụng defaultSuccessUrl mà không có tham số 'true'
-                        // để nó ưu tiên quay lại trang mà người dùng đã bị chặn trước đó (ví dụ trang chọn ghế)
-                        .defaultSuccessUrl("/home", false)
-
-                        // Nếu đăng nhập thất bại, ép nó quay về trang login của bạn kèm lỗi
+                        .successHandler(successHandler)
                         .failureUrl("/auth/login?error=true")
                         .permitAll()
                 )

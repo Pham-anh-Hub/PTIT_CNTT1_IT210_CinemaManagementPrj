@@ -14,7 +14,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,16 +41,21 @@ public class MovieController {
                                  HttpSession session,
                                  Model model) {
 
-        // 1. Lấy thông tin phim (vẫn để ở đây vì thuộc MovieController)
-        model.addAttribute("movie", movieService.getMovieById(id));
+        Movie movie = movieService.getMovieById(id);
+
+        // Lọc chỉ các suất chiếu sắp tới
+        List<ShowTime> upcomingShows = movie.getShowTimes().stream()
+                .filter(st -> st.getStartAt().isAfter(LocalDateTime.now()))
+                .sorted(Comparator.comparing(ShowTime::getStartAt))
+                .toList();
+
+        model.addAttribute("movie", movie);
+        model.addAttribute("upcomingShows", upcomingShows); // dùng list mới này
 
         if (showId != null) {
             session.setAttribute("selectedShowId", showId);
-
-            // Đọc selectedSeatIds từ session để hiển thị, KHÔNG toggle
             List<Long> selectingIds = (List<Long>) session.getAttribute("selectedSeatIds");
             if (selectingIds == null) selectingIds = new ArrayList<>();
-
             bookingService.populateBookingModel(model, showId, selectingIds);
         }
 

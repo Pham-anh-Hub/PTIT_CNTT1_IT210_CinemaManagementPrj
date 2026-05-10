@@ -14,7 +14,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,7 +45,7 @@ public class HomeController {
 
     @GetMapping("/staff/home")
     public String staffHome() {
-        return "home_for_staff";
+        return "staff-booking-list";
     }
 
     @GetMapping("/user/booking-list")
@@ -95,7 +97,7 @@ public class HomeController {
         Booking booking = bookingRepository.findByIdWithTickets(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn đặt vé"));
 
-        // Bảo vệ: chỉ xem được đơn của chính mình
+        //
         Long userId = profileService.getCurrentUserId(authentication);
         if (!booking.getUser().getUserId().equals(userId)) {
             return "redirect:/user/booking-list";
@@ -105,4 +107,28 @@ public class HomeController {
         return "booking-detail";
     }
 
+    // nghiệp vụ xử lý hủy vé
+    @PostMapping("/user/booking/{id}/cancel")
+    public String cancelBooking(
+            @PathVariable Long id,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
+    ) {
+        Long userId = profileService.getCurrentUserId(authentication);
+
+        try {
+            bookingService.cancelByUser(id, userId);
+            Booking booking = bookingService.getBookingById(id);
+            if (booking.getStatus() == BookingStatus.CANCELLED_PENDING){
+                redirectAttributes.addFlashAttribute("successMsg", "Yêu cầu hủy vé đã được gửi đi, vui lòng chờ xác nhận hoàn tiền!");
+            }else {
+                redirectAttributes.addFlashAttribute("successMsg", "Đã hủy đơn hàng thành công!");
+            }
+
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMsg", e.getMessage());
+        }
+
+        return "redirect:/user/booking-list";
+    }
 }
