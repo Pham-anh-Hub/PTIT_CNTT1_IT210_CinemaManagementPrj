@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -38,6 +39,7 @@ public class ShowTimeService {
         LocalDateTime now = LocalDateTime.now();
 
         return showTimeRepository.findAllWithDetails().stream()
+                .filter(s -> s.getStatus() != null && s.getStatus() != ShowStatus.DELETED)
                 .filter(s -> {
                     boolean matchKeyword = (keyword == null || keyword.isEmpty()) ||
                             s.getMovie().getMovieTitle().toLowerCase().contains(keyword.toLowerCase());
@@ -83,15 +85,25 @@ public class ShowTimeService {
     @Transactional
     public ShowTime createShowTime(ShowTimeDTO dto) {
         // 1. Lấy thông tin Movie để biết thời lượng (duration)
-        Movie movie = movieRepository.findById(dto.getMovieId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phim!"));
+        Movie movie = movieRepository.findById(dto.getMovieId()).orElseThrow(() -> new RuntimeException("Không tìm thấy phim!"));
 
         // 2. Lấy thông tin Room
-        Room room = roomRepository.findById(dto.getRoomId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng chiếu!"));
+        Room room = roomRepository.findById(dto.getRoomId()).orElseThrow(() -> new RuntimeException("Không tìm thấy phòng chiếu!"));
 
         // 3. Tính toán endedAt = startAt + duration (phút) + 15 phút dọn phòng (tùy chọn)
         LocalDateTime startAt = dto.getStartAt();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        if (startAt.isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Không thể tạo suất chiếu trong quá khứ. Vui lòng chọn thời gian hiện tại hoặc tương lai.");
+        }
+
+        // 3. Kiểm tra nếu suất chiếu trước ngày công chiếu
+        if (startAt.isBefore(movie.getReleasedDate().atStartOfDay())) {
+            String formattedReleaseDate = movie.getReleasedDate().format(formatter);
+            throw new RuntimeException("Phim chỉ được chiếu từ ngày công chiếu trở đi: " + formattedReleaseDate);
+        }
+
+
         LocalDateTime endedAt = startAt.plusMinutes(movie.getDurations()).plusMinutes(15);
 
         // 4. Kiểm tra xung đột lịch chiếu bằng Query bạn đã viết
@@ -137,6 +149,17 @@ public class ShowTimeService {
         LocalDateTime startAt = dto.getStartAt();
         LocalDateTime endedAt = startAt.plusMinutes(movie.getDurations()).plusMinutes(15);
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        if (startAt.isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Không thể tạo suất chiếu trong quá khứ. Vui lòng chọn thời gian hiện tại hoặc tương lai.");
+        }
+
+        // 3. Kiểm tra nếu suất chiếu trước ngày công chiếu
+        if (startAt.isBefore(movie.getReleasedDate().atStartOfDay())) {
+            String formattedReleaseDate = movie.getReleasedDate().format(formatter);
+            throw new RuntimeException("Phim chỉ được chiếu từ ngày công chiếu trở đi: " + formattedReleaseDate);
+        }
+
         // 4. KIỂM TRA XUNG ĐỘT (QUAN TRỌNG: Truyền chính ID hiện tại vào excludeId)
         // Việc truyền 'id' vào giúp SQL bỏ qua chính bản ghi này khi kiểm tra chồng chéo
         List<ShowTime> conflicts = showTimeRepository.findConflicts(
@@ -147,7 +170,7 @@ public class ShowTimeService {
         );
 
         if (!conflicts.isEmpty()) {
-            ShowTime firstConflict = conflicts.get(0);
+            ShowTime firstConflict = conflicts.getFirst();
             throw new RuntimeException("Xung đột! Phòng đã có phim '"
                     + firstConflict.getMovie().getMovieTitle()
                     + "' chiếu đến " + firstConflict.getEndedAt().format(DateTimeFormatter.ofPattern("HH:mm")));
@@ -164,52 +187,71 @@ public class ShowTimeService {
         return showTimeRepository.save(existingShowTime);
     }
 
+    @Transactional
     public void deleteShowTime(Long id) {
-        // 1. Kiểm tra sự tồn tại
+        // 1. Tìm suất chiếu chưa bị xóa
         ShowTime showTime = showTimeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy suất chiếu để xóa!"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy suất chiếu!"));
 
-        // 2. KIỂM TRA RÀNG BUỘC: Đã có vé nào được đặt cho suất này chưa?
-        boolean hasTickets = !ticketRepository.findByShowTime_ShowId(id).isEmpty();
+        // 2. Kiểm tra nếu đã xóa  rồi
+        if (showTime.getStatus() == ShowStatus.DELETED) {
+            throw new RuntimeException("Suất chiếu này đã bị xóa trước đó!");
+        }
+        LocalDateTime now = LocalDateTime.now();
 
-        if (hasTickets) {
-            throw new RuntimeException("Không thể xóa suất chiếu này vì đã có khách hàng đặt vé! " +
-                    "Vui lòng hủy các vé liên quan trước khi thực hiện.");
+        // 2. Kiểm tra thời gian kết thúc
+        // Nếu suất chiếu CHƯA kết thúc (đang chiếu hoặc sắp chiếu) thì mới chặn xóa khi có vé
+        if (showTime.getEndedAt().isAfter(now)) {
+
+            if (showTime.getTickets() != null && !showTime.getTickets().isEmpty()) {
+                // Kiểm tra xem có vé nào ở trạng thái CONFIRMED (đã thanh toán/xác nhận) không
+                boolean hasActiveTickets = showTime.getTickets().stream()
+                        .anyMatch(t -> t.getBooking().getStatus().equals("CONFIRMED") ||
+                                t.getBooking().getStatus().equals("PAID"));
+
+                if (hasActiveTickets) {
+                    throw new RuntimeException("Suất chiếu đang/sắp diễn ra và đã có khách đặt vé. " +
+                            "Không thể xóa để đảm bảo quyền lợi khách hàng!");
+                }
+            }
         }
 
-        // 3. Nếu không có ràng buộc, tiến hành xóa
+        // 3. Thực hiện XÓA MỀM (Dành cho cả trường hợp đã kết thúc HOẶC chưa kết thúc nhưng không có vé)
         try {
-            showTimeRepository.delete(showTime);
+            showTime.setStatus(ShowStatus.DELETED);
+            showTimeRepository.save(showTime);
         } catch (Exception e) {
-            throw new RuntimeException("Có lỗi xảy ra khi xóa suất chiếu: " + e.getMessage());
+            throw new RuntimeException("Lỗi hệ thống khi thực hiện xóa: " + e.getMessage());
         }
     }
 
-    public List<SeatDTO> getSeatMapForShow(Long showId, List<Long> selectingIds) {
-        ShowTime showTime = showTimeRepository.findById(showId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy suất chiếu"));
+    public List<SeatDTO> getSeatMapForShow(Long showId, Long currentUserId, List<Long> selectingIds) {
+        ShowTime showTime = showTimeRepository.findById(showId).orElseThrow(() -> new RuntimeException("Không tìm thấy suất chiếu"));
 
         List<Seat> seatsInDb = seatRepository.findByRoom_RoomId(showTime.getRoom().getRoomId());
 
-        //  Chỉ lấy ticket của đơn PENDING và CONFIRMED
-        Set<Long> bookedSeatIds = ticketRepository
+        // Lấy Map Ticket theo SeatId để tra cứu nhanh (O(1))
+        Map<Long, Ticket> activeTickets = ticketRepository
                 .findActiveByShowId(showId, List.of(BookingStatus.PENDING, BookingStatus.CONFIRMED))
                 .stream()
-                .map(t -> t.getSeat().getSeatId())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toMap(t -> t.getSeat().getSeatId(), t -> t, (t1, t2) -> t1));
 
         return seatsInDb.stream().map(seat -> {
-            boolean isBooked = bookedSeatIds.contains(seat.getSeatId());
-            boolean isSelecting = selectingIds != null && selectingIds.contains(seat.getSeatId());
+            Ticket t = activeTickets.get(seat.getSeatId());
 
-            //  Dùng NHÂN cho nhất quán với createPendingBooking
-            BigDecimal modifier = seat.getSeatModifier() != null
-                    ? seat.getSeatModifier() : BigDecimal.ONE;
-            BigDecimal price = showTime.getBasePrice().multiply(modifier);
+            // MẶC ĐỊNH: Ghế bị khóa (booked) nếu có Ticket của người khác hoặc đã CONFIRMED
+            boolean isBooked = (t != null) &&
+                    (t.getBooking().getStatus() == BookingStatus.CONFIRMED ||
+                            !t.getBooking().getUser().getUserId().equals(currentUserId));
 
-            return new SeatDTO(seat.getSeatId(), seat.getSeatName(),
-                    seat.getSeatLevel(), price, isBooked, isSelecting);
+            // MẶC ĐỊNH: Ghế đang chọn (selecting) nếu là Ticket PENDING của chính mình
+            boolean isSelecting = (t != null && t.getBooking().getStatus() == BookingStatus.PENDING
+                    && t.getBooking().getUser().getUserId().equals(currentUserId))
+                    || (selectingIds != null && selectingIds.contains(seat.getSeatId()));
 
+            BigDecimal price = showTime.getBasePrice().multiply(seat.getSeatModifier() != null ? seat.getSeatModifier() : BigDecimal.ONE);
+
+            return new SeatDTO(seat.getSeatId(), seat.getSeatName(), seat.getSeatLevel(), price, isBooked, isSelecting);
         }).collect(Collectors.toList());
     }
 

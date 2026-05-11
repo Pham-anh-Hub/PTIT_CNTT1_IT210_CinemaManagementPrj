@@ -6,12 +6,15 @@ import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.enums.ShowStatus;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.model.ShowTime;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 // repository/ShowTimeRepository.java
 @Repository
@@ -51,11 +54,17 @@ public interface ShowTimeRepository extends JpaRepository<ShowTime, Long> {
 
 
     // Cập nhật suất chiếu theo thơif gian thực và thời gia suất chiếu kết thúc
+    @Modifying
+    @Transactional
     @Query("""
-        update ShowTime s set s.status = :status where s.endedAt < :now and s.status != :newStatus
+        update ShowTime s set s.status = :status where s.endedAt < :now and s.status != :status
         """)
-    void updateShowtimeStatus(@Param("now") LocalDateTime now, @Param("newStatus")ShowStatus status);
+    void updateShowtimeStatus(@Param("now") LocalDateTime now, @Param("status") ShowStatus status);
 
+    // Tìm suất chiếu chưa bị xóa
+    Optional<ShowTime> findByShowIdAndStatusNot(Long id, ShowStatus status);
 
+    // Lấy tất cả suất chiếu trừ những cái đã xóa (dùng cho danh sách Admin)
+    List<ShowTime> findAllByStatusNot(ShowStatus status);
 }
 

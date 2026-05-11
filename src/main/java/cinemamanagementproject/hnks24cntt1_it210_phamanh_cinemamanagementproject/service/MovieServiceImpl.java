@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,6 +81,11 @@ public class MovieServiceImpl implements IMovieService {
         Movie movie = new Movie();
         mapDtoToEntity(dto, movie);
         movie.setCreatedAt(LocalDateTime.now());
+        if (movie.getReleasedDate().isBefore(LocalDate.now())){
+            movie.setStatus(MovieStatus.NOW_SHOWING);
+        }else if (movie.getReleasedDate().isAfter(LocalDate.now())){
+            movie.setStatus(MovieStatus.UPCOMING);
+        }
         movieRepository.save(movie);
     }
 
@@ -88,13 +94,30 @@ public class MovieServiceImpl implements IMovieService {
     public void updateMovie(MovieRequestDTO dto) {
         Movie movie = findMovie(dto.getMovieId());
         mapDtoToEntity(dto, movie);
+        if (movie.getReleasedDate().isBefore(LocalDate.now())){
+            movie.setStatus(MovieStatus.NOW_SHOWING);
+        }else if (movie.getReleasedDate().isAfter(LocalDate.now())){
+            movie.setStatus(MovieStatus.UPCOMING);
+        }
         movieRepository.save(movie);
     }
 
     @Override
     @Transactional
     public void deleteMovie(Long id) {
-        movieRepository.deleteById(id);
+        //  Tìm phim trong Database
+        Movie movie = movieRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy phim để xóa!"));
+
+        // Chuyển trạng thái sang Ngừng chiếu (Xóa mềm)
+        movie.setStatus(MovieStatus.ENDED);
+
+        // Lưu lại thay đổi
+        try {
+            movieRepository.save(movie);
+        } catch (Exception e) {
+            throw new RuntimeException("Có lỗi xảy ra khi cập nhật trạng thái phim: " + e.getMessage());
+        }
     }
 
     @Override public long countAll()                     {

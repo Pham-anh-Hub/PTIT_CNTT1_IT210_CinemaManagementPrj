@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Cinema Center</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-dark:    #0d0f14;
+            --bg-card:    #161920;
+            --border:     #252830;
+            --orange:     #ff9800;
+            --orange-dim: rgba(255,152,0,0.12);
+            --text:       #e8eaf0;
+            --muted:      #5a5f72;
+            --input-bg:   #1c1f28;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+        }
+
+        /* ===== LAYOUT ===== */
+        .login-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== LEFT PANEL ===== */
+        .left-panel {
+            flex: 1;
+            background: linear-gradient(160deg, #0d0f14 0%, #141820 40%, #1a1200 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 48px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative circles */
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            width: 500px; height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,152,0,0.08) 0%, transparent 70%);
+            top: -100px; left: -100px;
+            pointer-events: none;
+        }
+
+        .left-panel::after {
+            content: '';
+            position: absolute;
+            width: 300px; height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,152,0,0.06) 0%, transparent 70%);
+            bottom: -60px; right: -60px;
+            pointer-events: none;
+        }
+
+        /* Film strip decoration */
+        .film-strip {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 6px;
+            background: repeating-linear-gradient(
+                    90deg,
+                    var(--orange) 0px,
+                    var(--orange) 20px,
+                    transparent 20px,
+                    transparent 32px
+            );
+            opacity: 0.6;
+        }
+
+        .cinema-logo {
+            width: 180px;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 20px;
+            border: 2px solid rgba(255,152,0,0.3);
+            box-shadow: 0 0 40px rgba(255,152,0,0.15), 0 20px 60px rgba(0,0,0,0.5);
+            margin-bottom: 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.4rem;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -0.02em;
+            text-align: center;
+            line-height: 1.1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-name span {
+            color: var(--orange);
+        }
+
+        .brand-tagline {
+            margin-top: 14px;
+            font-size: 0.9rem;
+            color: var(--muted);
+            text-align: center;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Decorative dots */
+        .dots {
+            display: flex;
+            gap: 8px;
+            margin-top: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--border);
+        }
+
+        .dot.active { background: var(--orange); width: 24px; border-radius: 4px; }
+
+        /* ===== RIGHT PANEL ===== */
+        .right-panel {
+            flex: 1;
+            flex-shrink: 0;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 48px;
+        }
+
+        .form-container { width: 100%; }
+
+        .form-header { margin-bottom: 36px; }
+
+        .form-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .form-header p {
+            font-size: 0.88rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* Error alert */
+        .error-alert {
+            background: rgba(240,80,80,0.1);
+            border: 1px solid rgba(240,80,80,0.3);
+            border-radius: 10px;
+            color: #f08080;
+            font-size: 0.85rem;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Form fields */
+        .field { margin-bottom: 20px; }
+
+        .field label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .field input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 0.92rem;
+            font-family: 'DM Sans', sans-serif;
+            padding: 13px 16px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .field input:focus {
+            border-color: var(--orange);
+            box-shadow: 0 0 0 3px rgba(255,152,0,0.1);
+        }
+
+        .field input.is-invalid {
+            border-color: #f08080;
+        }
+
+        .field input::placeholder { color: #3a3f50; }
+
+        /* Password wrapper */
+        .password-wrap {
+            position: relative;
+        }
+
+        .password-wrap input { padding-right: 56px; }
+
+        .toggle-pw {
+            position: absolute;
+            right: 14px; top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 4px 6px;
+            transition: color 0.2s;
+        }
+
+        .toggle-pw:hover { color: var(--orange); }
+
+        /* Submit button */
+        .btn-login {
+            width: 100%;
+            background: var(--orange);
+            border: none;
+            border-radius: 10px;
+            color: #111;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: 'DM Sans', sans-serif;
+            letter-spacing: 0.04em;
+            padding: 14px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+        }
+
+        .btn-login:hover {
+            background: #e08800;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(255,152,0,0.25);
+        }
+
+        .btn-login:active { transform: translateY(0); }
+
+        /* Register link */
+        .register-link {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .register-link a {
+            color: var(--orange);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .register-link a:hover { text-decoration: underline; }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 28px 0;
+        }
+
+        /* Back link */
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+            margin-bottom: 32px;
+        }
+
+        .back-link:hover { color: var(--text); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .left-panel { display: none; }
+            .right-panel { width: 100%; border-left: none; padding: 40px 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-wrapper">
+
+    <!-- ===== CỘT TRÁI: Logo + Tên hệ thống ===== -->
+    <div class="left-panel">
+
+        <img src="https://www.shutterstock.com/image-vector/cinema-building-flat-style-isolated-600nw-2537915939.jpg"
+             alt="Cinema Center"
+             class="cinema-logo">
+
+        <div class="brand-name">
+            Cinema<br><span>Center</span>
+        </div>
+
+        <div class="brand-tagline">Hệ thống đặt vé rạp chiếu phim</div>
+    </div>
+
+    <!-- ===== CỘT PHẢI: Form đăng nhập ===== -->
+    <div class="right-panel">
+        <div class="form-container">
+
+            <!-- Back to home -->
+            <a th:href="@{/home}" class="back-link">
+                ← Về trang chủ
+            </a>
+
+            <div class="form-header">
+                <h2>Đăng nhập</h2>
+                <p>Đăng nhập để quản lý vé, điểm thưởng<br>và thông tin thành viên của bạn.</p>
+            </div>
+
+            <!-- Error message -->
+            <div class="error-alert" th:if="${param.error}">
+                !Email hoặc mật khẩu không đúng. Vui lòng thử lại.
+            </div>
+
+            <form th:action="@{/cinema/auth/login}"
+                  th:object="${loginDTO}"
+                  method="post">
+
+                <!-- EMAIL -->
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input type="email"
+                           id="email"
+                           th:field="*{email}"
+                           th:class="${param.error} ? 'is-invalid' : ''"
+                           placeholder="example@gmail.com"
+                           autocomplete="email">
+                </div>
+
+                <!-- PASSWORD -->
+                <div class="field">
+                    <label for="password">Mật khẩu</label>
+                    <div class="password-wrap">
+                        <input type="password"
+                               id="password"
+                               th:field="*{password}"
+                               th:class="${param.error} ? 'is-invalid' : ''"
+                               placeholder="••••••••"
+                               autocomplete="current-password">
+                        <button type="button"
+                                class="toggle-pw"
+                                onclick="togglePassword('password', this)">
+                            Hiện
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login">Đăng nhập</button>
+
+            </form>
+
+            <div class="divider"></div>
+
+            <div class="register-link">
+                Bạn chưa có tài khoản?
+                <a th:href="@{/templates/auth-form/register}">Đăng ký ngay</a>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.textContent = 'Ẩn';
+        } else {
+            input.type = 'password';
+            btn.textContent = 'Hiện';
+        }
+    }
+</script>
+</body>
+</html>

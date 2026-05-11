@@ -11,7 +11,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -29,14 +28,16 @@ public class BookingController {
                              HttpSession session) {
 
         session.setAttribute("selectedShowId", showId); //
-        bookingService.handleSeatToggle(session, toggleSeat); // ← chỉ lưu ghế, không lưu showId
+        bookingService.handleSeatToggle(session, toggleSeat, showId);
         return "redirect:/cinema/movie/detail/" + movieId + "?showId=" + showId;
     }
 
     @GetMapping("/confirm")
-    public String showConfirmPage(HttpSession session, Model model) {
+    public String showConfirmPage(HttpSession session, Model model, Authentication authentication) {
         // 1. Lấy danh sách ID ghế từ Session
         List<Long> selectingIds = (List<Long>) session.getAttribute("selectedSeatIds");
+
+        Long userId = profileService.getCurrentUserId(authentication);
 
         if (selectingIds == null || selectingIds.isEmpty()) {
             // Nếu không có ghế nào được chọn, quay lại trang chủ hoặc báo lỗi
@@ -45,9 +46,9 @@ public class BookingController {
 
         // 2. Gọi Service để lấy thông tin chi tiết (Tên ghế, Suất chiếu, Tổng tiền)
         // Bạn có thể dùng chung logic populateBookingModel đã viết ở BookingService
-        bookingService.populateConfirmModel(model, session);
+        bookingService.populateConfirmModel(model, userId , session);
 
-        return "booking-confirm"; // Trả về file
+        return "booking/booking-confirm"; // Trả về file
     }
 
     @PostMapping("/payment")

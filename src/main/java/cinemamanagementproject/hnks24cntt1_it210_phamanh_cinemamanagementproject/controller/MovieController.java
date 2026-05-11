@@ -3,12 +3,10 @@ package cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementprojec
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.dto.SeatDTO;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.model.Movie;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.model.ShowTime;
-import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.service.BookingService;
-import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.service.IMovieService;
-import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.service.ShowTimeService;
-import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.service.TicketService;
+import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.service.*;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +24,7 @@ import java.util.stream.Collectors;
 public class MovieController {
 
     private final IMovieService movieService; // Giả định bạn đã có Service
-    private final ShowTimeService showTimeService;
-    private final TicketService ticketService;
+    private final ProfileServiceImpl profileService;
     private final BookingService bookingService;
 
     // Khởi tạo session nếu chưa có
@@ -39,9 +36,11 @@ public class MovieController {
     public String getMovieDetail(@PathVariable("id") Long id,
                                  @RequestParam(required = false) Long showId,
                                  HttpSession session,
+                                 Authentication authentication,
                                  Model model) {
 
         Movie movie = movieService.getMovieById(id);
+        Long userId = profileService.getCurrentUserId(authentication);
 
         // Lọc chỉ các suất chiếu sắp tới
         List<ShowTime> upcomingShows = movie.getShowTimes().stream()
@@ -56,15 +55,17 @@ public class MovieController {
             session.setAttribute("selectedShowId", showId);
             List<Long> selectingIds = (List<Long>) session.getAttribute("selectedSeatIds");
             if (selectingIds == null) selectingIds = new ArrayList<>();
-            bookingService.populateBookingModel(model, showId, selectingIds);
+            bookingService.populateBookingModel(model, showId, userId, selectingIds);
         }
 
         return "detail_movie";
     }
 
     private BigDecimal calculateTotal(List<SeatDTO> seatMap, List<Long> selectedIds) {
+        if (selectedIds == null || selectedIds.isEmpty()) return BigDecimal.ZERO;
+
         return seatMap.stream()
-                .filter(s -> selectedIds.contains(s.getSeatId()))
+                .filter(dto -> selectedIds.contains(dto.getSeatId())) // Chỉ tính ghế của MÌNH
                 .map(SeatDTO::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }

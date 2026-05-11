@@ -98,7 +98,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     // Top 5 phim có donanh thu cao nhất
     @Query("""
-            select m.movieTitle as movie_title, sum(b.totalAmount) as revenue, count(distinct b.bookingId)
+            select m.movieTitle as movie_title, sum(distinct b.totalAmount) as revenue, count(distinct b.bookingId)
                         from Booking b join Ticket t on t.booking.bookingId = b.bookingId
                              join ShowTime s on s.showId = t.showTime.showId
                                          join Movie m on m.movieId = s.movie.movieId

@@ -40,13 +40,13 @@ public class AuthController {
             model.addAttribute("message", "Bạn đã đăng xuất thành công");
         }
 
-        return "auth/login_form";
+        return "auth-form/login_form";
     }
 
     @GetMapping("/auth/register")
     public String registerPage(Model model) {
         model.addAttribute("registerDTO", new RegisterDTO());
-        return "auth/register_form";
+        return "auth-form/register_form";
     }
     @PostMapping("/auth/on-register")
     public String registerUser(@Valid @ModelAttribute("registerDTO") RegisterDTO registerDTO,
@@ -55,24 +55,24 @@ public class AuthController {
 
         // 1. Kiểm tra lỗi định dạng (Email, Trống, Độ dài mật khẩu)
         if (bindingResult.hasErrors()) {
-            return "auth/register_form";
+            return "auth-form/register_form";
         }
 
         // 2. Kiểm tra mật khẩu khớp nhau
         if (!registerDTO.getPassword().equals(registerDTO.getConfirmPassword())) {
             model.addAttribute("errorMessage", "Mật khẩu xác nhận không khớp!");
-            return "auth/register_form";
+            return "auth-form/register_form";
         }
 
         // 3. Kiểm tra trùng dữ liệu
         if (userService.existsByEmail(registerDTO.getEmail())) {
             model.addAttribute("errorMessage", "Email này đã được sử dụng!");
-            return "auth/register_form";
+            return "auth-form/register_form";
         }
 
         if (userService.existsByPhone(registerDTO.getPhone())) {
             model.addAttribute("errorMessage", "Số điện thoại đã được sử dụng!");
-            return "auth/register_form";
+            return "auth-form/register_form";
         }
 
         // 4. Lưu và chuyển hướng
@@ -81,7 +81,7 @@ public class AuthController {
             return "redirect:/auth/login"; // Thêm param để hiện thông báo thành công
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
-            return "auth/register_form";
+            return "auth-form/register_form";
         }
     }
 }

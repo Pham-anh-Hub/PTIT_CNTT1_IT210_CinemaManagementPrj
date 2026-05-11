@@ -90,34 +90,31 @@
                  alt="Cinema Center">
         </div>
         <div class="logo-text text-light text-lg">
-            CINEMA <br/> CENTER
+            CINEMA <br/>  CENTER
         </div>
     </a>
     <nav class="sidebar-nav">
         <a th:href="@{/cinema/admin/movies}"
            class="sidebar-link">
-            <span class="icon">🎬</span> Quản lý Phim
+            <ion-icon style="font-size: 1rem" name="film"></ion-icon> Quản lý Phim
         </a>
         <a th:href="@{/admin/showtimes}"
            class="sidebar-link">
-            <span class="icon">🕐</span> Suất chiếu
+            <ion-icon style="font-size: 1rem" name="time"></ion-icon> Suất chiếu
         </a>
-        <a th:href="@{/admin/users}"
-           class="sidebar-link">
-            <span class="icon">👥</span> Người dùng
-        </a>
+
     </nav>
     <div class="sidebar-footer">
-        <a th:href="@{/cinema/profile}" class="admin-info" style="display: flex; align-items: center; margin-bottom: 1rem; margin-left: 1rem">
+        <a th:href="@{/cinema/profile}" class="admin-info" style="display: flex; align-items: center; margin-bottom: 1rem; margin-left: 1rem; text-decoration: none">
             <div class="admin-details" style="display: flex; flex-direction: column;">
                 <span class="admin-name" style="color: #fff; font-size: 0.9rem; font-weight: 600;" th:text="${#authentication.name}">Admin</span>
                 <span class="admin-role" style="color: #94a3b8; font-size: 0.75rem;">Quản trị viên</span>
             </div>
         </a>
 
-        <form id="logoutForm" th:action="@{/auth/logout}" method="post" style="display: none;"></form>
+        <form id="logoutForm" th:action="@{/templates/auth-form/logout}" method="post" style="display: none;"></form>
 
-        <a th:href="@{/auth/logout}" class="sidebar-link" style="color: #ff7675 !important;"
+        <a th:href="@{/templates/auth-form/logout}" class="sidebar-link" style="color: #ff7675 !important;"
            onclick="if(confirm('Bạn có chắc chắn muốn đăng xuất?')) document.getElementById('logoutForm').submit(); return false;">
             <span class="icon">🚪</span> Đăng xuất
         </a>
@@ -125,6 +122,7 @@
 </div>
 
 <!-- Optional JavaScript -->
+<script src="https://unpkg.com/ionicons@4.5.10-0/dist/ionicons.js"></script>
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
@@ -135,5 +133,7 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
+
+
 </body>
 </html>

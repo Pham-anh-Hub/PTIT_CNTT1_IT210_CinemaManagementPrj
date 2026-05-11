@@ -64,6 +64,7 @@ public class AdminService {
         for (Object[] row : ratingTop5Movie) {
             String title = (String) row[0];
             BigDecimal revenue = new BigDecimal(row[1].toString());
+            System.out.println("movie revenue: "+revenue);
             int bookingCount = ((Number) row[2]).intValue();
             int percent = revenue.multiply(BigDecimal.valueOf(100)).divide(maxMovie, 0, RoundingMode.HALF_UP).intValue();
             top5MovieRevenue.add(new MovieRevenueDTO(title, revenue, bookingCount, percent));

@@ -34,7 +34,7 @@ public class BookingService {
     }
 
     // 1. Xử lý logic chọn/hủy ghế và trả về list ID mới
-    public List<Long> handleSeatToggle(HttpSession session, Long toggleSeat) {
+    public List<Long> handleSeatToggle(HttpSession session, Long toggleSeat, Long showId) {
         List<Long> selectingIds = (List<Long>) session.getAttribute("selectedSeatIds");
         if (selectingIds == null) {
             selectingIds = new ArrayList<>();
@@ -44,7 +44,18 @@ public class BookingService {
             if (selectingIds.contains(toggleSeat)) {
                 selectingIds.remove(toggleSeat);
             } else {
-                selectingIds.add(toggleSeat);
+                // KIỂM TRA TRƯỚC KHI ADD:
+                // Nếu người A đã nhanh tay nhấn "Đặt vé" (đã có Ticket PENDING trong DB)
+                // thì người B không được phép add ghế này vào danh sách tính tiền nữa.
+                boolean isAlreadyTaken = ticketRepository.existsAnyActiveTicket(
+                        showId,
+                        List.of(toggleSeat),
+                        List.of(BookingStatus.PENDING, BookingStatus.CONFIRMED)
+                );
+
+                if (!isAlreadyTaken) {
+                    selectingIds.add(toggleSeat);
+                }
             }
         }
 
@@ -53,35 +64,34 @@ public class BookingService {
     }
 
     // 2. Gom dữ liệu cần thiết cho View vào một Map hoặc một DTO riêng
-    public void populateBookingModel(Model model, Long showId, List<Long> selectingIds) {
-        // 1. Lấy thông tin suất chiếu và phòng
+    public void populateBookingModel(Model model, Long showId, Long userId, List<Long> selectingIds) {
         ShowTime showTime = showTimeService.findById(showId);
-        int totalSeat = showTime.getRoom().getTotalSeat();
+        // seatMap vẫn lấy đủ để vẽ màu sắc trên sơ đồ (người khác chọn thì hiện màu xám/xanh)
+        List<SeatDTO> seatMap = showTimeService.getSeatMapForShow(showId, userId, selectingIds);
 
-        // 2. Lấy danh sách SeatDTO (hàm này đã truy vấn trực tiếp từ SeatRepository)
-        // Phải đảm bảo size của seatMap này bằng với totalSeat của Room
-        List<SeatDTO> seatMap = showTimeService.getSeatMapForShow(showId, selectingIds);
+        // --- BƯỚC RESET DỮ LIỆU CÁ NHÂN ---
+        // Chỉ lấy những ghế mà ID nằm trong Session của chính người đang xem
+        List<SeatDTO> mySelectingSeats = (selectingIds == null) ? List.of() :
+                seatMap.stream()
+                .filter(dto -> selectingIds.contains(dto.getSeatId()))
+                .toList();
 
-        // 3. Tính toán số cột để chia hàng (Ví dụ: 10 ghế/hàng)
-        int columns = 10;
-        // 4. Đẩy tất cả vào Model
         model.addAttribute("selectedShow", showTime);
-        model.addAttribute("seatMap", seatMap); // Chứa đúng số lượng ghế của phòng
-        model.addAttribute("totalSeat", totalSeat);
-        model.addAttribute("columns", columns);
+        model.addAttribute("seatMap", seatMap);
+        model.addAttribute("totalSeat", showTime.getRoom().getTotalSeat());
+        model.addAttribute("columns", 10);
 
-        // Tính tổng tiền dựa trên các ghế đang Selecting
-        model.addAttribute("totalPrice", calculateTotal(seatMap));
+        // 1. Tính tổng tiền: CHỈ tính trên mySelectingSeats (Giỏ hàng của mình)
+        model.addAttribute("totalPrice", calculateTotal(mySelectingSeats));
 
-        // Lấy danh sách tên ghế đang chọn để hiện thị (Ví dụ: A1, A2)
-        List<String> selectedNames = seatMap.stream()
-                .filter(SeatDTO::isSelecting)
+        // 2. Lấy tên ghế: CHỈ lấy từ mySelectingSeats
+        List<String> selectedNames = mySelectingSeats.stream()
                 .map(SeatDTO::getSeatName)
                 .toList();
         model.addAttribute("selectedSeatNames", selectedNames);
     }
 
-    public void populateConfirmModel(Model model, HttpSession session) {
+    public void populateConfirmModel(Model model, Long userId, HttpSession session) {
         List<Long> selectingIds = (List<Long>) session.getAttribute("selectedSeatIds");
         Long showId = (Long) session.getAttribute("selectedShowId");
 
@@ -90,16 +100,24 @@ public class BookingService {
             throw new RuntimeException("Phiên làm việc đã hết hạn hoặc bạn chưa chọn ghế!");
         }
 
-        List<SeatDTO> seatMap = showTimeService.getSeatMapForShow(showId, selectingIds);
+        List<SeatDTO> seatMap = showTimeService.getSeatMapForShow(showId, userId, selectingIds);
 
-        model.addAttribute("selectedSeats", seatMap.stream().filter(SeatDTO::isSelecting).toList());
-        model.addAttribute("totalPrice", calculateTotal(seatMap));
+        // Chỉ lọc những ghế có ID nằm trong danh sách đang chọn của SESSION hiện tại
+        List<SeatDTO> mySelectingSeats = seatMap.stream()
+                .filter(dto -> selectingIds.contains(dto.getSeatId()))
+                .toList();
+
+        model.addAttribute("selectedSeats", mySelectingSeats);
+
+        // Sử dụng hàm calculateTotal đã sửa (nhận list rút gọn) để tính tiền chính xác
+        model.addAttribute("totalPrice", calculateTotal(mySelectingSeats));
+
         model.addAttribute("showTime", showTimeService.findById(showId));
     }
 
-    private BigDecimal calculateTotal(List<SeatDTO> seatMap) {
-        return seatMap.stream()
-                .filter(SeatDTO::isSelecting)
+    private BigDecimal calculateTotal(List<SeatDTO> selectedSeats) {
+        if (selectedSeats == null) return BigDecimal.ZERO;
+        return selectedSeats.stream()
                 .map(SeatDTO::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
@@ -163,13 +181,13 @@ public class BookingService {
             ticket.setBooking(booking);
             ticket.setShowTime(showTime);
             ticket.setSeat(seat);
-            ticket.setTicketPrice(basePrice.multiply(seat.getSeatModifier())); // đúng field name
+            ticket.setTicketPrice(basePrice.multiply(seat.getSeatModifier()));
             return ticket;
         }).collect(Collectors.toList());
 
         ticketRepository.saveAll(tickets);
 
-        // THÊM TRY-CATCH: Để bắt lỗi Duplicate Entry nếu 2 người nhấn cùng lúc
+        // TRY-CATCH: bắt lỗi Duplicate Entry nếu 2 người nhấn cùng lúc
         try {
             ticketRepository.saveAll(tickets);
         } catch (Exception e) {
@@ -213,15 +231,15 @@ public class BookingService {
 
         // 2. Xử lý theo từng trạng thái hiện tại của đơn
         if (booking.getStatus() == BookingStatus.PENDING) {
-            // HƯỚNG 1: Đơn chưa thanh toán -> Hủy trực tiếp ngay lập tức
+//            ticketRepository.deleteAll(booking.getTickets());
+
             booking.setStatus(BookingStatus.CANCELLED);
-            // (Tùy chọn) Xóa tickets hoặc giải phóng ghế ở đây nếu cần
+            bookingRepository.save(booking);
 
         } else if (booking.getStatus() == BookingStatus.CONFIRMED || booking.getStatus() == BookingStatus.PAID) {
-            // HƯỚNG 2: Đơn đã thanh toán (CONFIRMED hoặc PAID)
-
+            // Đơn đã thanh toán (CONFIRMED hoặc PAID)
             // Kiểm tra thời gian (chỉ cho phép yêu cầu hủy trước 24h)
-            LocalDateTime showTime = booking.getTickets().get(0).getShowTime().getStartAt();
+            LocalDateTime showTime = booking.getTickets().getFirst().getShowTime().getStartAt();
             if (LocalDateTime.now().isAfter(showTime.minusHours(24))) {
                 throw new RuntimeException("Không thể hủy vé — Phải thực hiện trước giờ chiếu 24 tiếng");
             }
@@ -237,7 +255,7 @@ public class BookingService {
     }
 
     // Chạy mỗi 5 phút — tự động hủy các đơn PENDING đã hết hạn
-    @Scheduled(fixedDelay = 300_000)
+    @Scheduled(fixedDelay = 300000)
     @Transactional
     public void autoExpirePendingBookings() {
         LocalDateTime now = LocalDateTime.now();
@@ -248,10 +266,12 @@ public class BookingService {
         List<Booking> toCancel = pendingBookings.stream()
                 .filter(b -> !b.getTickets().isEmpty())
                 .filter(b -> {
-                    LocalDateTime showStart = b.getTickets().getFirst().getShowTime().getStartAt();
-                    return now.isAfter(showStart); // suất chiếu đã qua
-                })
-                .toList();
+                    // nếu đã quá 5p mà chưa thanh toán
+                    boolean isTimeout = b.getBookedAt().plusMinutes(5).isBefore(now);
+                    // nếu đã qua bắt đầu chiếu mà mới đặt
+                    boolean isStartedShow = b.getTickets().getFirst().getShowTime().getStartAt().plusMinutes(15).isBefore(now);
+                    return isTimeout || isStartedShow;
+                }).toList();
 
         toCancel.forEach(b -> b.setStatus(BookingStatus.CANCELLED));
         bookingRepository.saveAll(toCancel);

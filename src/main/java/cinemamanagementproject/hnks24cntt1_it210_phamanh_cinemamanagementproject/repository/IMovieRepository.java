@@ -21,4 +21,5 @@ public interface IMovieRepository extends JpaRepository<Movie, Long> {
 
     // Đếm theo trạng thái — dùng cho stats card
     long countByStatus(MovieStatus status);
+
 }

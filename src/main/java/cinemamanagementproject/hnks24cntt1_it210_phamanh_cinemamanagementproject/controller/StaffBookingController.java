@@ -25,7 +25,7 @@ public class StaffBookingController {
     // Lấy ra danh sách đơn đặt đã thanh toán
     @GetMapping
     public String listPaidBooking(
-            @RequestParam(name = "searchBooking", defaultValue = "") String keyword,
+            @RequestParam(name = "keyword", defaultValue = "") String keyword,
             Model model
     ){
         List<Booking> bookings;
@@ -43,7 +43,7 @@ public class StaffBookingController {
         model.addAttribute("cancelCounts", cancelBookings);
         model.addAttribute("keyword", keyword);
 
-        return "staff-booking-list";
+        return "staff/staff-booking-list";
     }
 
     @PostMapping("/{id}/confirm")

@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @Entity
 @Table(
     name = "tickets",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"show_id", "seat_id"})
+    uniqueConstraints = @UniqueConstraint(columnNames = {"show_id", "seat_id", "booking_id"})
 )
 @Getter @Setter
 public class Ticket {

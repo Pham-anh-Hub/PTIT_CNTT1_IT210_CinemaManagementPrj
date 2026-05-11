@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - Cinema Center</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-dark:    #0d0f14;
+            --bg-card:    #161920;
+            --border:     #252830;
+            --orange:     #ff9800;
+            --orange-dim: rgba(255,152,0,0.12);
+            --text:       #e8eaf0;
+            --muted:      #5a5f72;
+            --input-bg:   #1c1f28;
+        }
+
+        html, body { height: 100%; font-family:'Inter', sans-serif; background: var(--bg-dark); color: var(--text); }
+
+        .login-wrapper { display: flex; min-height: 100vh; }
+
+        /* ===== CỘT TRÁI ===== */
+        .left-panel {
+            flex: 1;
+            background: linear-gradient(160deg, #0d0f14 0%, #141820 40%, #1a1200 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 48px;
+            position: relative;
+            overflow: hidden;
+        }
+
+
+        .left-panel::after {
+            content: '';
+            position: absolute;
+            width: 300px; height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,152,0,0.06) 0%, transparent 70%);
+            bottom: -60px; right: -60px;
+        }
+
+        .film-strip {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 6px;
+            background: repeating-linear-gradient(90deg, var(--orange) 0px, var(--orange) 20px, transparent 20px, transparent 32px);
+            opacity: 0.6;
+        }
+
+        .cinema-logo {
+            width: 160px; height: 160px;
+            object-fit: cover;
+            border-radius: 20px;
+            border: 2px solid rgba(255,152,0,0.3);
+            box-shadow: 0 0 40px rgba(255,152,0,0.15), 0 20px 60px rgba(0,0,0,0.5);
+            margin-bottom: 28px;
+            position: relative; z-index: 1;
+        }
+
+        .brand-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem; font-weight: 900;
+            color: #fff; letter-spacing: -0.02em;
+            text-align: center; line-height: 1.1;
+            position: relative; z-index: 1;
+        }
+
+        .brand-name span { color: var(--orange); }
+
+        .brand-tagline {
+            margin-top: 12px;
+            font-size: 0.85rem; color: var(--muted);
+            text-align: center; letter-spacing: 0.08em;
+            text-transform: uppercase;
+            position: relative; z-index: 1;
+        }
+
+        /* Benefits list */
+        .benefits {
+            margin-top: 36px;
+            list-style: none;
+            position: relative; z-index: 1;
+            width: 100%; max-width: 280px;
+        }
+
+        .benefits li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,152,0,0.1);
+            font-size: 0.85rem;
+            color: #8a8fa8;
+        }
+
+        .benefits li:last-child { border-bottom: none; }
+
+        .benefits li .icon {
+            width: 28px; height: 28px;
+            background: var(--orange-dim);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; flex-shrink: 0;
+        }
+
+        /* ===== CỘT PHẢI ===== */
+        .right-panel {
+            width: 520px; flex-shrink: 0;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            padding: 48px 48px;
+            overflow-y: auto;
+        }
+
+        .form-container { width: 100%; }
+
+        .back-link {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.8rem; color: var(--muted);
+            text-decoration: none; transition: color 0.2s;
+            margin-bottom: 28px;
+        }
+        .back-link:hover { color: var(--text); }
+
+        .form-header { margin-bottom: 28px; }
+        .form-header h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
+        .form-header p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+        /* Error */
+        .error-alert {
+            background: rgba(240,80,80,0.1);
+            border: 1px solid rgba(240,80,80,0.3);
+            border-radius: 10px; color: #f08080;
+            font-size: 0.85rem; padding: 12px 16px;
+            margin-bottom: 20px;
+        }
+
+        /* Fields */
+        .field { margin-bottom: 16px; }
+        .field-row { display: flex; gap: 14px; margin-bottom: 16px; }
+        .field-row .field { flex: 1; margin-bottom: 0; }
+
+        .field label {
+            display: block;
+            font-size: 0.75rem; font-weight: 600;
+            letter-spacing: 0.06em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 7px;
+        }
+
+        .field input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 0.9rem;
+            font-family: 'DM Sans', sans-serif;
+            padding: 12px 16px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .field input:focus {
+            border-color: var(--orange);
+            box-shadow: 0 0 0 3px rgba(255,152,0,0.1);
+        }
+
+        .field input.is-invalid { border-color: #f08080; }
+        .field input::placeholder { color: #3a3f50; }
+
+        .field-error {
+            font-size: 0.78rem; color: #f08080;
+            margin-top: 5px;
+        }
+
+        /* Hint dưới field mật khẩu */
+        .field-hint { font-size: 0.75rem; color: var(--muted); margin-top: 5px; }
+
+        /* Button */
+        .btn-submit {
+            width: 100%;
+            background: var(--orange); border: none;
+            border-radius: 10px; color: #111;
+            font-size: 0.95rem; font-weight: 700;
+            font-family: 'DM Sans', sans-serif;
+            padding: 14px; cursor: pointer; margin-top: 6px;
+            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: #e08800;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(255,152,0,0.25);
+        }
+
+        .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+        .login-link { text-align: center; font-size: 0.85rem; color: var(--muted); }
+        .login-link a { color: var(--orange); text-decoration: none; font-weight: 600; }
+        .login-link a:hover { text-decoration: underline; }
+
+        @media (max-width: 768px) {
+            .left-panel { display: none; }
+            .right-panel { width: 100%; border-left: none; padding: 32px 24px; }
+            .field-row { flex-direction: column; gap: 0; }
+            .field-row .field { margin-bottom: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-wrapper">
+
+    <!-- ===== CỘT TRÁI ===== -->
+    <div class="left-panel">
+
+        <img src="https://www.shutterstock.com/image-vector/cinema-building-flat-style-isolated-600nw-2537915939.jpg"
+             alt="Cinema Center"
+             class="cinema-logo">
+
+        <div class="brand-name">Cinema<br><span>Center</span></div>
+        <div class="brand-tagline">Hệ thống đặt vé rạp chiếu phim</div>
+
+        <!-- Lợi ích khi đăng ký -->
+        <ul class="benefits">
+            <li>
+                <div class="icon">🎟</div>
+                Đặt vé nhanh chóng, tiện lợi
+            </li>
+            <li>
+                <div class="icon">📋</div>
+                Theo dõi lịch sử đặt vé
+            </li>
+        </ul>
+    </div>
+
+    <!-- ===== CỘT PHẢI ===== -->
+    <div class="right-panel">
+        <div class="form-container">
+
+            <a th:href="@{/home}" class="back-link">← Về trang chủ</a>
+
+            <div class="form-header">
+                <h2>Tạo tài khoản</h2>
+                <p>Đăng ký để trải nghiệm đặt vé nhanh chóng<br>và theo dõi lịch sử xem phim của bạn.</p>
+            </div>
+
+            <!-- Error chung -->
+            <div class="error-alert"
+                 th:if="${errorMessage != null and !errorMessage.isBlank()}">
+                ⚠ <span th:text="${errorMessage}"></span>
+            </div>
+
+            <form th:action="@{/templates/auth-form/on-register}"
+                  th:object="${registerDTO}"
+                  method="post">
+
+                <!-- Họ + Tên -->
+                <div class="field-row">
+                    <div class="field">
+                        <label for="lastName">Họ</label>
+                        <input type="text" id="lastName"
+                               th:field="*{lastName}"
+                               th:class="${#fields.hasErrors('lastName')} ? 'is-invalid' : ''"
+                               placeholder="Nguyễn">
+                        <div class="field-error"
+                             th:if="${#fields.hasErrors('lastName')}"
+                             th:errors="*{lastName}"></div>
+                    </div>
+
+                    <div class="field">
+                        <label for="firstName">Tên</label>
+                        <input type="text" id="firstName"
+                               th:field="*{firstName}"
+                               th:class="${#fields.hasErrors('firstName')} ? 'is-invalid' : ''"
+                               placeholder="Văn A">
+                        <div class="field-error"
+                             th:if="${#fields.hasErrors('firstName')}"
+                             th:errors="*{firstName}"></div>
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email"
+                           th:field="*{email}"
+                           th:class="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                           placeholder="example@gmail.com"
+                           autocomplete="email">
+                    <div class="field-error"
+                         th:if="${#fields.hasErrors('email')}"
+                         th:errors="*{email}"></div>
+                </div>
+
+                <!-- Số điện thoại -->
+                <div class="field">
+                    <label for="phone">Số điện thoại</label>
+                    <input type="tel" id="phone"
+                           th:field="*{phone}"
+                           th:class="${#fields.hasErrors('phone')} ? 'is-invalid' : ''"
+                           placeholder="0912 345 678">
+                    <div class="field-error"
+                         th:if="${#fields.hasErrors('phone')}"
+                         th:errors="*{phone}"></div>
+                </div>
+
+                <!-- Mật khẩu + Xác nhận -->
+                <div class="field-row">
+                    <div class="field">
+                        <label for="password">Mật khẩu</label>
+                        <input type="password" id="password"
+                               th:field="*{password}"
+                               th:class="${#fields.hasErrors('password') or (errorMessage != null and errorMessage.contains('Mật khẩu'))} ? 'is-invalid' : ''"
+                               placeholder="••••••••"
+                               autocomplete="new-password">
+                        <div class="field-error"
+                             th:if="${#fields.hasErrors('password')}"
+                             th:errors="*{password}"></div>
+                        <div class="field-hint">Tối thiểu 6 ký tự</div>
+                    </div>
+
+                    <div class="field">
+                        <label for="confirmPassword">Xác nhận mật khẩu</label>
+                        <input type="password" id="confirmPassword"
+                               th:field="*{confirmPassword}"
+                               th:class="${#fields.hasErrors('confirmPassword') or (errorMessage != null and errorMessage.contains('Mật khẩu'))} ? 'is-invalid' : ''"
+                               placeholder="••••••••"
+                               autocomplete="new-password">
+                        <div class="field-error"
+                             th:if="${errorMessage != null and errorMessage.contains('Mật khẩu')}"
+                             th:text="${errorMessage}"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">Tạo tài khoản</button>
+
+            </form>
+
+            <div class="divider"></div>
+
+            <div class="login-link">
+                Đã có tài khoản?
+                <a th:href="@{/templates/auth-form/login}">Đăng nhập ngay</a>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

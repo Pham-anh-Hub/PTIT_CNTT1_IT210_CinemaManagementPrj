@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8"/>
     <title>Quản lý Suất chiếu — Smart Cinema Admin</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -64,8 +68,7 @@
         .logo-text{
             color: white;
             line-height: 1.1;
-            font-weight: bold;
-            font-size: 12px;
+            font-size: 1rem;
         }
         /* Sidebar */
         .admin-sidebar {
@@ -527,12 +530,15 @@
 
                     <td>
                         <div class="actions">
-                            <a th:href="@{/admin/showtimes/edit/{id}(id=${s.showId})}"
-                                class="btn-edit">✏ Sửa</a>
+                            <!--   Suuất chiếu end rồi - k sửa  -->
+                            <a th:unless="${s.status.equalsIgnoreCase('ENDED')}" th:href="@{/admin/showtimes/edit/{id}(id=${s.showId})}"
+                                class="btn btn-outline-info"> Sửa</a>
+                            <!--    -->
+
                             <form th:action="@{/admin/showtimes/delete/{id}(id=${s.showId})}"
                                   method="post" style="display:inline"
                                   onsubmit="return confirm('Xóa suất chiếu này?')">
-                                <button type="submit" class="btn-del">🗑 Xóa</button>
+                                <button type="submit" class="btn btn-outline-danger">Xóa</button>
                             </form>
                         </div>
                     </td>
@@ -581,6 +587,9 @@
         document.getElementById('statusFilter').value = '';
         filterTable();
     }
+
+    <script src="https://unpkg.com/ionicons@4.5.10-0/dist/ionicons.js"></script>
+
 </script>
 </body>
 </html>

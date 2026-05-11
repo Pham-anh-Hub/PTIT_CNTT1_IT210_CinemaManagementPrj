@@ -24,7 +24,7 @@
             <img src="https://www.shutterstock.com/image-vector/cinema-building-flat-style-isolated-600nw-2537915939.jpg"
                  alt="Cinema Center">
         </div>
-        <div class="logo-text">
+        <div class="logo-text" style="font-size: 18px">
             CINEMA <br/> CENTER
         </div>
     </div>
@@ -39,7 +39,12 @@
             </a>
 
             <a class="nav-link"
-               th:unless="${#authorization.expression('hasRole(''STAFF'')')}" th:href="@{/home}">
+               th:if="${#authorization.expression('hasRole(''CUSTOMER'')')}" th:href="@{/home}">
+                Trang chủ
+            </a>
+
+            <a class="nav-link"
+               th:if="${#authorization.expression('hasRole(''ADMIN'')')}" th:href="@{/admin/dashboard}">
                 Trang chủ
             </a>
         </li>
@@ -55,10 +60,10 @@
 
     <!-- CHƯA ĐĂNG NHẬP -->
     <div sec:authorize="isAnonymous()" class="auth-buttons">
-        <a class="btn-register" th:href="@{/auth/register}">
+        <a class="btn-register" th:href="@{/templates/auth-form/register}">
             Đăng ký
         </a>
-        <a class="btn-login" th:href="@{/auth/login}"
+        <a class="btn-login" th:href="@{/templates/auth-form/login}"
            style="text-decoration: none; color: white">
             Đăng nhập
         </a>
@@ -89,7 +94,7 @@
         </a>
 
         <!-- Logout -->
-        <a th:href="@{/auth/logout}"
+        <a th:href="@{/templates/auth-form/logout}"
            style="color: white; font-size: 20px;">
             <ion-icon name="log-out-outline"></ion-icon>
         </a>

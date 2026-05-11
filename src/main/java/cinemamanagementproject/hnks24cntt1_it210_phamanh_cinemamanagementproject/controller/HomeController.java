@@ -9,7 +9,9 @@ import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.service.AdminService;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.service.BookingService;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.service.ProfileServiceImpl;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Session;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -45,12 +47,12 @@ public class HomeController {
             Model model
     ) {
         adminService.getAnalyseData().forEach(model::addAttribute);
-        return "admin-dashboard";
+        return "admin/admin-dashboard";
     }
 
     @GetMapping("/staff/home")
     public String staffHome() {
-        return "staff-booking-list";
+        return "staff/staff-booking-list";
     }
 
     @GetMapping("/user/booking-list")
@@ -86,7 +88,7 @@ public class HomeController {
         model.addAttribute("filterFrom", fromDate);
         model.addAttribute("filterTo", toDate);
 
-        return "booking-history";
+        return "booking/booking-history";
     }
 
     @GetMapping("/user/booking-detail/{id}")
@@ -109,7 +111,7 @@ public class HomeController {
         }
 
         model.addAttribute("booking", booking);
-        return "booking-detail";
+        return "booking/booking-detail";
     }
 
     // nghiệp vụ xử lý hủy vé
@@ -117,8 +119,11 @@ public class HomeController {
     public String cancelBooking(
             @PathVariable Long id,
             Authentication authentication,
-            RedirectAttributes redirectAttributes
+            RedirectAttributes redirectAttributes,
+            HttpSession session
     ) {
+        session.removeAttribute("selectedSeatIds");
+        session.removeAttribute("selectedShowId");
         Long userId = profileService.getCurrentUserId(authentication);
 
         try {

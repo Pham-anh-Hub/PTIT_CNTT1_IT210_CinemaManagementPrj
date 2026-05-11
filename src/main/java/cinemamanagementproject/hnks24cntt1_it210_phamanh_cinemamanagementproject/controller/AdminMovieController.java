@@ -55,7 +55,7 @@ public class AdminMovieController {
         model.addAttribute("allGenres",   genreRepository.findAllByOrderByGenresNameAsc());
         model.addAttribute("statuses",    MovieStatus.values());
         model.addAttribute("isEdit",      false);
-        return "movie-form";
+        return "auth-form/movie-form";
     }
 
     /** Form chỉnh sửa */
@@ -65,7 +65,7 @@ public class AdminMovieController {
         model.addAttribute("allGenres",   genreRepository.findAllByOrderByGenresNameAsc());
         model.addAttribute("statuses",    MovieStatus.values());
         model.addAttribute("isEdit",      true);
-        return "movie-form";
+        return "auth-form/movie-form";
     }
 
     /** Lưu (thêm mới hoặc cập nhật) */
@@ -83,7 +83,7 @@ public class AdminMovieController {
             model.addAttribute("allGenres", genreRepository.findAllByOrderByGenresNameAsc());
             model.addAttribute("statuses",  MovieStatus.values());
             model.addAttribute("isEdit",    dto.getMovieId() != null);
-            return "movie-form";
+            return "auth-form/movie-form";
         }
 
         if (dto.getMovieId() == null) {

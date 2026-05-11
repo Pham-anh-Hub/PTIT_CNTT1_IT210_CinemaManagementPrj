@@ -5,11 +5,15 @@ import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.repository.IMovieRepository;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.repository.RoomRepository;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.service.ShowTimeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import javax.naming.Binding;
 
 // controller/admin/ShowTimeController.java
 @Controller
@@ -51,21 +55,30 @@ public class ShowTimeController {
         model.addAttribute("showTimeDTO", new ShowTimeDTO());
         model.addAttribute("movies", movieRepository.findAll());
         model.addAttribute("rooms",  roomRepository.findAll());
-        return "showtime-form";
+        return "auth-form/showtime-form";
     }
 
     /** Xử lý tạo mới */
     @PostMapping("/create")
     public String doCreate(
-            @ModelAttribute ShowTimeDTO dto,
+            @Valid @ModelAttribute ShowTimeDTO dto,
+            BindingResult bindingResult,
+            Model model,
             RedirectAttributes ra
     ) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("movies", movieRepository.findAll());
+            model.addAttribute("rooms", roomRepository.findAll());
+            return "auth-form/showtime-form";
+        }
         try {
             showTimeService.createShowTime(dto);
             ra.addFlashAttribute("success", "Tạo suất chiếu thành công!");
         } catch (RuntimeException e) {
-            ra.addFlashAttribute("error", e.getMessage());
-            return "redirect:/admin/showtimes/create";
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("movies", movieRepository.findAll());
+            model.addAttribute("rooms", roomRepository.findAll());
+            return "auth-form/showtime-form";
         }
         return "redirect:/admin/showtimes";
     }
@@ -85,7 +98,7 @@ public class ShowTimeController {
         model.addAttribute("showId",  id);
         model.addAttribute("movies",  movieRepository.findAll());
         model.addAttribute("rooms",   roomRepository.findAll());
-        return "showtime-form";
+        return "auth-form/showtime-form";
     }
 
     /** Xử lý sửa */

@@ -147,6 +147,7 @@
 
         /* Status badge */
         .status-confirmed { background: #1a3a2a; color: #4caf80; border: 1px solid #2d6e4e; padding: 4px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; }
+        .status-paid { background: #3a331a; color: #afa74c; border: 1px solid #686e2d; padding: 4px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; }
         .status-cancelled { background: #3a1a1a; color: #f08080; border: 1px solid #7a3030; padding: 4px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; }
         .status-pending   { background: #3a2e10; color: #f5c518; border: 1px solid #7a6020; padding: 4px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; }
 
@@ -218,6 +219,7 @@
         <div class="info-row">
             <span class="label">Trạng thái</span>
             <span th:if="${booking.status.name() == 'CONFIRMED'}" class="status-confirmed">✔ Thành công</span>
+            <span th:if="${booking.status.name() == 'PAID'}" class="status-paid">Đã thanh toán</span>
             <span th:if="${booking.status.name() == 'PENDING'}"   class="status-pending">⏳ Chờ thanh toán</span>
             <span th:if="${booking.status.name() == 'CANCELLED'}" class="status-cancelled">✖ Đã hủy</span>
         </div>
