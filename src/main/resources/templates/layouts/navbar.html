@@ -34,7 +34,12 @@
         <!-- Dùng so sánh == an toàn hơn .equals() -->
         <li class="nav-item">
             <a class="nav-link"
-               th:href="${#authorization.expression('hasRole(''STAFF'')')} ? @{/staff/bookings} : @{/home}">
+               th:if="${#authorization.expression('hasRole(''STAFF'')')}" th:href="@{/staff/bookings}">
+                Trang chủ
+            </a>
+
+            <a class="nav-link"
+               th:unless="${#authorization.expression('hasRole(''STAFF'')')}" th:href="@{/home}">
                 Trang chủ
             </a>
         </li>

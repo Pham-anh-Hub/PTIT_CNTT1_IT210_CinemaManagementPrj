@@ -3,6 +3,6 @@ package cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementprojec
 public enum SeatLevel {
     STANDARD,
     VIP,
-    COUPLE
+    EXTRA
 
 }

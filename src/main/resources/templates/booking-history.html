@@ -60,7 +60,9 @@
                         style="background:#0f1724; border:1px solid #2a3550; border-radius:8px; color:#e0e6f0; font-size:0.85rem; padding:8px 12px; width:100%; outline:none;">
                     <option value="">Tất cả</option>
                     <option value="CONFIRMED" th:selected="${filterStatus == 'CONFIRMED'}">Thành công</option>
-                    <option value="PENDING" th:selected="${filterStatus == 'PENDING'}">Chờ xác nhận</option>
+                    <option value="PENDING" th:selected="${filterStatus == 'PENDING'}">Chưa thanh toán</option>
+                    <option value="CANCELLED_PENDING" th:selected="${filterStatus == 'CANCELLED_PENDING'}">Chờ xác nhận hủy</option>
+                    <option value="PAID" th:selected="${filterStatus == 'PAID'}">Chờ xác nhận </option>
                     <option value="CANCELLED" th:selected="${filterStatus == 'CANCELLED'}">Đã hủy</option>
                 </select>
             </div>

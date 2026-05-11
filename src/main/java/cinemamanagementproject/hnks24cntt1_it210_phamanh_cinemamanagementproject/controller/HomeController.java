@@ -6,6 +6,7 @@ import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.repository.BookingRepository;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.repository.IMovieRepository;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.repository.UserRepository;
+import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.service.AdminService;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.service.BookingService;
 import cinemamanagementproject.hnks24cntt1_it210_phamanh_cinemamanagementproject.service.ProfileServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class HomeController {
     private final BookingService bookingService;
     private final ProfileServiceImpl profileService;
     private final BookingRepository bookingRepository;
+    private final AdminService adminService;
 
     @GetMapping("/home")
     public String homePage(Model model) {
@@ -39,8 +41,11 @@ public class HomeController {
     }
 
     @GetMapping("/admin/dashboard")
-    public String adminDashboard() {
-        return "admin/admin-movie-list";
+    public String adminDashboard(
+            Model model
+    ) {
+        adminService.getAnalyseData().forEach(model::addAttribute);
+        return "admin-dashboard";
     }
 
     @GetMapping("/staff/home")

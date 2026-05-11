@@ -11,6 +11,11 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    @Query("""
+            select count(u.userId) from User u where u.role = 'CUSTOMER'
+            """)
+    long getTotalCustomer();
+
     Optional<User> findByEmail(String email);
 
     boolean existsByEmail(String email);

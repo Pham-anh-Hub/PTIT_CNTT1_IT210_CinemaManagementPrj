@@ -73,7 +73,7 @@
                 </h4>
                 <div style="display: flex; justify-content: space-between; align-items: center">
                     <p class="card-text text-light"
-                       th:text="${m.description}">
+                       th:text="${m.description.length() > 100 ? m.description.substring(0, 50) : m.description} + '...'">
                     </p>
                 </div>
             </div>
@@ -88,7 +88,7 @@
 <div style=" display: flex;gap: 20px;flex-wrap: wrap; margin: 10px 45px;">
     <div th:each="m : ${movieUpcoming}"
          style="width: 22vw;">
-        <a th:href="@{/cinema/movie/detail/{id}(id=${m.movieId})}" class="card h-90" style="border-radius: 18px; border: none; box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;">
+        <a th:href="@{/cinema/movie/detail/{id}(id=${m.movieId})}" class="card h-90" style="border-radius: 18px; text-decoration: none; border: none; box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px; background: transparent">
             <img class="card-img-top"
                  th:src="${m.posterUrl != null && m.posterUrl.startsWith('http') ? m.posterUrl : '/images/' + m.posterUrl}"
                  alt="Movie Poster"
@@ -97,12 +97,12 @@
                     height: 350px;
                     object-fit: cover; ">
             <div class="card-body">
-                <h4 class="card-title"
+                <h4 class="card-title text-light"
                     th:text="${m.movieTitle}">
                 </h4>
                 <div style="display: flex; justify-content: space-between; align-items: center">
-                    <p class="card-text"
-                       th:text="${m.description}">
+                    <p class="card-text text-light"
+                       th:text="${m.description.length() > 100 ? m.description.substring(0, 50) : m.description} + '...'">
                     </p>
                 </div>
             </div>

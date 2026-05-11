@@ -289,15 +289,8 @@ public class BookingService {
         booking.setStatus(BookingStatus.CANCELLED);
 
         // 4. XỬ LÝ NHẢ GHẾ (Rất quan trọng)
-        // Tùy thuộc vào thiết kế hệ thống của bạn, chọn 1 trong 2 cách sau:
 
-        /* CÁCH 1: Nếu Entity Ticket của bạn CÓ trường trạng thái (ví dụ TicketStatus)
-        booking.getTickets().forEach(ticket -> {
-            ticket.setStatus(TicketStatus.CANCELLED);
-        });
-        */
-
-        // CÁCH 2: Nếu Entity Ticket KHÔNG CÓ trạng thái, bạn phải XÓA vé đi để ghế đó hiện trống lại
+        // Nếu Entity Ticket KHÔNG CÓ trạng thái, bạn phải XÓA vé đi để ghế đó hiện trống lại
         ticketRepository.deleteAll(booking.getTickets());
         booking.getTickets().clear();
 

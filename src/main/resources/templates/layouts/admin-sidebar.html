@@ -78,9 +78,10 @@
 
 <div th:fragment="sidebar" class="admin-sidebar">
     <!-- LOGO -->
-    <div class="logo-wrapper" style="display: flex;
+    <a th:href="@{/admin/dashboard}" class="logo-wrapper" style="display: flex;
         align-items: center;
         justify-content: center;
+        text-decoration: none;
         gap: 14px;">
         <div class="logo-box" style="">
             <img style="width: 80px;
@@ -88,10 +89,10 @@
             object-fit: cover; border-radius: 12px;" src="https://www.shutterstock.com/image-vector/cinema-building-flat-style-isolated-600nw-2537915939.jpg"
                  alt="Cinema Center">
         </div>
-        <div class="logo-text">
+        <div class="logo-text text-light text-lg">
             CINEMA <br/> CENTER
         </div>
-    </div>
+    </a>
     <nav class="sidebar-nav">
         <a th:href="@{/cinema/admin/movies}"
            class="sidebar-link">
